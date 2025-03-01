@@ -10,6 +10,161 @@ export interface MonthlyMovies {
 }
 
 export const moviesData: MonthlyMovies = {
+  "2024-07": [
+    {
+      title: "Hearts of Darkness: A Filmmaker's Apocalypse",
+      year: "1991",
+      posterUrl: "https://studiocloudstoragelive.blob.core.windows.net/campaigns/poster_024071.jpg?height=500&width=350",
+      date: "2024-07-23",
+    },
+    {
+      title: "Wild at Heart",
+      year: "1990",
+      posterUrl: "https://filmartgallery.com/cdn/shop/files/Wild-at-Heart-Vintage-Movie-Poster-Original-1-Sheet-27x41.jpg?v=1712199843?height=500&width=350",
+      date: "2024-07-31",
+    },
+
+  ],
+  "2024-08": [
+    {
+      title: "Memories of Murder",
+      year: "2003",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BYmRjOWE5NmMtYTdkYS00ODFlLWJiMTMtYzE2NDZlZjlkZDQ0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg?height=500&width=350",
+      date: "2024-08-06",
+    },
+    {
+      title: "All the President's Men",
+      year: "1976",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BZGQzMzcwMDYtMmNjNS00YzZlLTg2MjUtNTE0MThlNTFjMDQ0XkEyXkFqcGc@._V1_.jpg?height=500&width=350",
+      date: "2024-08-21",
+    },
+    {
+      title: "Short Cuts",
+      year: "1993",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BYThkMTY5ZTgtYzc0Yy00MTZiLWE5YjUtMDAwM2E4Yjg5MmM5XkEyXkFqcGc@._V1_.jpg?height=500&width=350",
+      date: "2024-08-27",
+    },
+
+  ],
+  "2024-09": [
+    {
+      title: "Big Trouble in Little China",
+      year: "1986",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/7/76/Big_Trouble_in_Little_China_Film_Poster.jpg?height=500&width=350",
+      date: "2024-09-03",
+    },
+    {
+      title: "Videodrome",
+      year: "1983",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BOTI0NDVlMjMtNWI5Yi00ZWM0LTg4NWUtNGRkYjU5NTBkZjVkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg?height=500&width=350",
+      date: "2024-09-10",
+    },
+    {
+      title: "A Woman Under the Influence",
+      year: "1974",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSz1eClQTlPjqudQmIOSIkHJMi9KfGRrNQzWQ&s?height=500&width=350",
+      date: "2024-09-17",
+    },
+    {
+      title: "Kinds of Kindness",
+      year: "2024",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMjZmZGY1MzMtNDVkNi00NjE2LTlkMzMtMmUzNWExY2ExZWI2XkEyXkFqcGc@._V1_QL75_UX190_CR0,2,190,281_.jpg?height=500&width=350",
+      date: "2024-09-24",
+    },
+  ],
+  "2024-10": [
+    {
+      title: "Comfortably Numb",
+      year: "1991",
+      posterUrl: "https://www.edb.co.il/photos/3401991_poster02.poster.jpg?height=500&width=350",
+      date: "2024-10-01",
+    },
+    {
+      title: "Fitzcarraldo",
+      year: "1982",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BYzJjNTRkNjUtZGE4MC00YmRlLWI0ODYtMzJjNGZkYWMzNTJhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg?height=500&width=350",
+      date: "2024-10-08",
+    },
+    {
+      title: "Sexy Beast",
+      year: "2000",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/9/90/Sexy_beast_ver1.jpg?height=500&width=350",
+      date: "2024-10-15",
+    },
+    {
+      title: "La Haine",
+      year: "1995",
+      posterUrl: "https://cdn.posteritati.com/posters/000/000/063/268/la-haine-md-web.jpg?height=500&width=350",
+      date: "2024-10-22",
+    },
+    {
+      title: "Nashville",
+      year: "1975",
+      posterUrl: "https://m.media-amazon.com/images/I/618WL2nqYjL._AC_UF894,1000_QL80_.jpg?height=500&width=350",
+      date: "2024-11-29",
+    },
+
+  ],
+  "2024-11": [
+    {
+      title: "Sypmathy for Lady Vengeance",
+      year: "2005",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMDQ4MDM4YjEtN2E3Yy00NDJjLTgzNWUtN2M4ZTVkMGEzMzhiXkEyXkFqcGc@._V1_.jpg?height=500&width=350",
+      date: "2024-11-12",
+    },
+    {
+      title: "El Sur",
+      year: "1983",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/0/08/The_South_%28film%29.jpg?height=500&width=350",
+      date: "2024-11-19",
+    },
+    {
+      title: "The State of Things",
+      year: "1982",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMTQyMzE4MjgwMV5BMl5BanBnXkFtZTgwOTEyMzkwMzE@._V1_FMjpg_UX1000_.jpg?height=500&width=350",
+      date: "2024-11-26",
+    },
+  ],
+  "2024-12": [
+    {
+      title: "The Searchers",
+      year: "1956",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SearchersPoster-BillGold.jpg/640px-SearchersPoster-BillGold.jpg?height=500&width=350",
+      date: "2024-12-03",
+    },
+    {
+      title: "Santa Sangre",
+      year: "1989",
+      posterUrl: "https://m.media-amazon.com/images/I/81f4KiF2YrL._AC_UF894,1000_QL80_.jpg?height=500&width=350",
+      date: "2024-12-10",
+    },
+  ],
+  "2025-01": [
+    {
+      title: "Stranger Than Paradise",
+      year: "1984",
+      posterUrl: "https://s3.amazonaws.com/criterion-production/films/7da214a5a5d94a222785c8dd5c257e57/85da9M3NwHvtnIvj6oK2ovJjtYOTX8_original.jpg?height=500&width=350",
+      date: "2025-01-07",
+    },
+    {
+      title: "Boogie Nights",
+      year: "1997",
+      posterUrl: "https://filmartgallery.com/cdn/shop/files/Boogie-Nights-Vintage-Movie-Poster-Original-1-Sheet-27x41-14_17b8c47a-7f8c-47d1-b599-bef59f3b16b8.jpg?v=1736485354?height=500&width=350",
+      date: "2025-01-14",
+    },
+    {
+      title: "The Player",
+      year: "1992",
+      posterUrl: "https://s3.amazonaws.com/criterion-production/films/0766da8ab2f5ffe38ca8fd231325b8f5/kAANocS3Pmyr9DXkivKYnVP0FH1Yjm_large.jpg?height=500&width=350",
+      date: "2025-01-21",
+    },
+    {
+      title: "All That Jazz",
+      year: "1979",
+      posterUrl: "https://s3.amazonaws.com/criterion-production/films/8ee8b30fd8b04c0925a571a6aa83551b/AMKYaHIhWGuRsN3wZvDOZojSyG2ZaD_original.jpg?height=500&width=350",
+      date: "2025-01-28",
+    },
+  ],
   "2025-02": [
     {
       title: "The Killing of a Chinese Bookie",
