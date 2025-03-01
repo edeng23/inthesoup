@@ -134,6 +134,8 @@
   display: inline-block;
   animation: float 3s ease-in-out infinite;
   animation-delay: calc(0.1s * var(--i, 0));
+  white-space: nowrap;
+  margin-right: 0.1em;
 }
 
 @keyframes float {

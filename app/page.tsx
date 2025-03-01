@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useSpring, animated } from "react-spring"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import { ChevronLeft, ChevronRight, Calendar, MapPin } from "lucide-react"
 import { moviesData, type Movie } from "@/data/movies"
 import "@/styles/wordart.css"
 import RetroAsteroids from "../components/RetroAsteroids"
@@ -54,11 +54,18 @@ export default function FilmClub() {
     config: { duration: 1000 },
   })
 
-  // Helper function to create animated title
+  // Helper function to create animated title with words as units
   const renderAnimatedTitle = (text: string) => {
-    return text.split('').map((char, i) => (
-      <span key={i} style={{ '--i': i } as React.CSSProperties}>
-        {char === ' ' ? '\u00A0' : char}
+    // Split by words instead of characters
+    return text.split(' ').map((word, i) => (
+      <span
+        key={i}
+        className="inline-block"
+        style={{ '--i': i } as React.CSSProperties}
+      >
+        {word}
+        {/* Add space after each word except the last one */}
+        {i < text.split(' ').length - 1 ? '\u00A0' : ''}
       </span>
     ));
   };
@@ -82,28 +89,33 @@ export default function FilmClub() {
 
   const { earliest, latest } = getNavigationLimits();
 
-  const isPreviousDisabled = earliest ? currentMonth <= earliest : true;
-  const isNextDisabled = latest ? currentMonth >= latest : true;
+  // Check if we're at the earliest or latest month with data
+  const isPreviousDisabled = earliest ?
+    format(currentMonth, "yyyy-MM") === format(earliest, "yyyy-MM") : true;
+  const isNextDisabled = latest ?
+    format(currentMonth, "yyyy-MM") === format(latest, "yyyy-MM") : true;
 
   const handlePreviousMonth = () => {
     const prevMonth = addMonths(currentMonth, -1);
-    if (hasMoviesForMonth(prevMonth) || (earliest && prevMonth >= earliest)) {
+    if (hasMoviesForMonth(prevMonth) || (earliest && format(prevMonth, "yyyy-MM") >= format(earliest, "yyyy-MM"))) {
       setCurrentMonth(prevMonth);
     }
   };
 
   const handleNextMonth = () => {
     const nextMonth = addMonths(currentMonth, 1);
-    if (hasMoviesForMonth(nextMonth) || (latest && nextMonth <= latest)) {
+    if (hasMoviesForMonth(nextMonth) || (latest && format(nextMonth, "yyyy-MM") <= format(latest, "yyyy-MM"))) {
       setCurrentMonth(nextMonth);
     }
   };
 
   return (
     <div
-      className="min-h-screen text-green-400 relative overflow-hidden p-4"
+      className="min-h-screen max-h-screen text-green-400 relative overflow-hidden p-4 flex flex-col"
       style={{
         backgroundColor: `hsl(${colorScheme.baseHue}, ${colorScheme.screenSaturation}%, ${colorScheme.screenLightness}%)`,
+        height: '100vh',
+        overscrollBehavior: 'none'
       }}
     >
       {/* Retro Asteroids Background */}
@@ -152,7 +164,7 @@ export default function FilmClub() {
         />
       </motion.div>
 
-      <animated.div style={fadeIn} className="container mx-auto py-12 px-4 relative z-10">
+      <animated.div style={fadeIn} className="container mx-auto py-12 px-4 relative z-10 overflow-auto flex-1">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -239,7 +251,7 @@ export default function FilmClub() {
           </div>
 
           <motion.div
-            className="retro-screen"
+            className="retro-screen overflow-auto"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -256,12 +268,11 @@ export default function FilmClub() {
                 className="wordart-random mb-4"
                 style={{ "--hue": colorScheme.complementaryHue } as React.CSSProperties}
               >
-                Film Club Screenings
+                Screenings
               </h2>
-              <p className="text-xl mt-2 text-green-400">{format(currentMonth, "yyyy")}</p>
               <div className="flex items-center justify-center gap-2 mt-2">
-                <Calendar className="h-5 w-5 text-green-400" />
-                <p className="text-lg text-green-400">Screenings on specified dates</p>
+                <MapPin className="h-5 w-5 text-green-400" />
+                <p className="text-lg text-green-400">Location annonced on the day</p>
               </div>
             </div>
 
