@@ -6,12 +6,8 @@ export const metadata: Metadata = {
   description: 'In the Soup for Love',
   generator: 'EdenG',
   icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon/icon.webp', type: 'image/webp' }
-    ],
-    shortcut: [{ url: '/favicon.ico' }],
-    apple: [{ url: '/icon/icon.webp' }]
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
   }
 }
 
@@ -22,11 +18,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon/icon.webp" />
-      </head>
       <body>{children}</body>
     </html>
   )
