@@ -272,7 +272,7 @@ export default function FilmClub() {
               </h2>
               <div className="flex items-center justify-center gap-2 mt-2">
                 <MapPin className="h-5 w-5 text-green-400" />
-                <p className="text-lg text-green-400">Location annonced on the day</p>
+                <p className="text-lg text-green-400">Location announced on the day</p>
               </div>
             </div>
 
