@@ -20,7 +20,7 @@ export const moviesData: MonthlyMovies = {
     {
       title: "Wild at Heart",
       year: "1990",
-      posterUrl: "https://filmartgallery.com/cdn/shop/files/Wild-at-Heart-Vintage-Movie-Poster-Original-1-Sheet-27x41.jpg?v=1712199843?height=500&width=350",
+      posterUrl: "https://filmartgallery.com/cdn/shop/products/Wild-at-Heart-Vintage-Movie-Poster-Original.jpg?v=1738904883",
       date: "2024-07-31",
     },
 
@@ -149,7 +149,7 @@ export const moviesData: MonthlyMovies = {
     {
       title: "Boogie Nights",
       year: "1997",
-      posterUrl: "https://filmartgallery.com/cdn/shop/files/Boogie-Nights-Vintage-Movie-Poster-Original-1-Sheet-27x41-14_17b8c47a-7f8c-47d1-b599-bef59f3b16b8.jpg?v=1736485354?height=500&width=350",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BOTFmZmE4OTMtNDYxNi00MmZmLThlYjktMmExMzMwY2YzOTFiXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
       date: "2025-01-14",
     },
     {
@@ -221,7 +221,7 @@ export const moviesData: MonthlyMovies = {
     {
       title: "3 Colours: Blue", 
       year: "1993",
-      posterUrl: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.imdb.com%2Ftitle%2Ftt0108394%2F&psig=AOvVaw1P7pMZy1_N0ZdoaoZG5nit&ust=1742903375858000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKie-5bToowDFQAAAAAdAAAAABAE",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BNWMxNWE2NGYtMzYwOS00NmJhLTgwNjAtNGM3ODIwNjU5MTZiXkEyXkFqcGc@._V1_.jpg",
       date: "2025-04-02",
     },
     {
