@@ -217,4 +217,31 @@ export const moviesData: MonthlyMovies = {
       date: "2025-03-25",
     },
   ],
+  "2025-04": [
+    {
+      title: "3 Colours: Blue", 
+      year: "1993",
+      posterUrl: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.imdb.com%2Ftitle%2Ftt0108394%2F&psig=AOvVaw1P7pMZy1_N0ZdoaoZG5nit&ust=1742903375858000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCKie-5bToowDFQAAAAAdAAAAABAE",
+      date: "2025-04-02",
+    },
+    {
+      title: "Red Desert",
+      year: "1964",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BOGI2YzgyNjgtNDcxZi00ZTVjLThhMDAtMTdlYTBlNmIxYzExXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+      date: "2025-04-08",
+    },
+    {
+      title: "True Romance",
+      year: "1993",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BYzQ5OGMwMDAtMzcyOS00YTA4LWEwM2MtOTA1MDZjZGEyYmI1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+      date: "2025-04-15",
+    },
+    {
+     title: "Right About Mid", 
+     year: "1996",
+     posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJPDY_FLTUfQqpk6NMRWGjGILf518BV4IO_Q&s",
+     date: "2025-04-22",
+    }
+    
+  ]
 }
