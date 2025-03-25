@@ -20,7 +20,7 @@ export const moviesData: MonthlyMovies = {
     {
       title: "Wild at Heart",
       year: "1990",
-      posterUrl: "https://filmartgallery.com/cdn/shop/products/Wild-at-Heart-Vintage-Movie-Poster-Original.jpg?v=1738904883",
+    posterUrl: "https://filmartgallery.com/cdn/shop/products/Wild-at-Heart-Vintage-Movie-Poster-Original.jpg?v=1738904883",
       date: "2024-07-31",
     },
 
@@ -237,11 +237,16 @@ export const moviesData: MonthlyMovies = {
       date: "2025-04-15",
     },
     {
-     title: "Right About Mid", 
+     title: "Right Around Midnight", 
      year: "1996",
      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJPDY_FLTUfQqpk6NMRWGjGILf518BV4IO_Q&s",
      date: "2025-04-22",
+    },
+    {
+      title: "Shadows in Paradise",
+      year: "1996",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTOU2itUMlsTTWssoxhNcv8DnuVmZkK1BDYA&s",
+      date: "2025-04-29",
     }
-    
   ]
 }
