@@ -242,11 +242,25 @@ export const moviesData: MonthlyMovies = {
      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJPDY_FLTUfQqpk6NMRWGjGILf518BV4IO_Q&s",
      date: "2025-04-22",
     },
+  ],
+  "2025-05": [
     {
       title: "Shadows in Paradise",
       year: "1996",
       posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTOU2itUMlsTTWssoxhNcv8DnuVmZkK1BDYA&s",
-      date: "2025-04-29",
+      date: "2025-05-06",
+    },
+    {
+      title: "The Fall",
+      year: "2006",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/2/26/Fall_ver2.jpg",
+      date: "2025-05-13",
+    },
+    {
+      title: "Tokyo!",
+      year: "2008",
+      posterUrl: "https://resizing.flixster.com/D2Dkf2k2sX4IX8bcvVYYflQjGms=/fit-in/705x460/v2/https://resizing.flixster.com/LzxtMnakV6f5Y1CuT_oGY5CWaTU=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzLzVlY2ZkYzYyLTgyZDQtNDZkOC1hYzA0LTA5YzEwZjQ1ZGI2ZC53ZWJw",
+      date: "2025-05-20",
     }
   ]
 }
