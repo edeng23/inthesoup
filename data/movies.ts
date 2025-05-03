@@ -10,7 +10,33 @@ export interface MonthlyMovies {
 }
 
 export const moviesData: MonthlyMovies = {
+  "2024-06": [
+    {
+      title: "Paris, Texas",
+      year: "1984",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BNTFjZDAyOGEtYmM5Mi00MGY4LTg3NDAtNTkwMzQ4OTcwZGJlXkEyXkFqcGc@._V1_.jpg",
+      date: "2024-06-17",
+    },
+    {
+      title: "Box of Moonlight",
+      year: "1996",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BZjJjYWIyNTYtOGU3Yy00MzJmLThhMDUtODU5OTBjOGJhMDFjXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+      date: "2024-06-24",
+    },
+  ],
   "2024-07": [
+    {
+      title: "Dogleg",
+      year:" 2023",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMGM4NjhjN2UtMjEzNC00NTcxLWI0YjQtZjYyMWExNjVlZjdkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+      date: "2024-07-09",
+    },
+    {
+      title: "There Will Be Blood",
+      year: "2007",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMjAxODQ4MDU5NV5BMl5BanBnXkFtZTcwMDU4MjU1MQ@@._V1_FMjpg_UX1000_.jpg",
+      date: "2024-07-16",
+    },
     {
       title: "Hearts of Darkness: A Filmmaker's Apocalypse",
       year: "1991",
