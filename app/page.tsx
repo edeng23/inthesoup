@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight, Calendar, MapPin } from "lucide-react"
 import { moviesData, type Movie } from "@/data/movies"
 import "@/styles/wordart.css"
 import RetroAsteroids from "../components/RetroAsteroids"
+import Confetti from 'react-confetti'
 
 // Define the color scheme type
 type ColorScheme = {
@@ -41,11 +42,34 @@ export default function FilmClub() {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [movies, setMovies] = useState<Movie[]>([])
   const [colorScheme, setColorScheme] = useState<ColorScheme>(generateColorScheme())
+  const [showConfetti, setShowConfetti] = useState(false)
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  })
+  const [confettiTriggered, setConfettiTriggered] = useState(false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     const monthKey = format(currentMonth, "yyyy-MM")
     setMovies(moviesData[monthKey] || [])
     setColorScheme(generateColorScheme())
+    if (monthKey === '2025-06') {
+      setShowConfetti(true)
+    } else {
+      setShowConfetti(false)
+    }
   }, [currentMonth])
 
   const fadeIn = useSpring({
@@ -118,6 +142,17 @@ export default function FilmClub() {
         overscrollBehavior: 'none'
       }}
     >
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.3}
+          style={{ position: 'fixed', top: 0, left: 0, zIndex: 9999 }}
+        />
+      )}
+      
       {/* Retro Asteroids Background */}
       <RetroAsteroids colorScheme={colorScheme} />
 
@@ -285,9 +320,44 @@ export default function FilmClub() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="relative"
                   >
+                    {movie.title === "In the Soup" && (
+                      <div
+                        className="absolute left-0 right-0 top-0 text-white text-center px-2 py-1 font-bold shadow-lg select-none w-full sm:left-0 sm:right-auto sm:-top-3 sm:px-8 sm:py-1 sm:font-bold sm:rounded-none sm:rotate-[-15deg] sm:min-w-[220px] sm:max-w-[90%] sm:border-2 sm:border-white"
+                        style={{
+                          background: 'linear-gradient(45deg, #4a00e0, #8e2de2, #ff6b6b)',
+                          backgroundSize: '200%',
+                          animation: 'gradient 8s ease infinite',
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                          boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                          transform: 'none',
+                          zIndex: 50,
+                          fontWeight: 'bold',
+                          fontSize: '0.95rem',
+                          letterSpacing: '0.03em',
+                          minWidth: '0',
+                          maxWidth: '100%',
+                          pointerEvents: 'auto',
+                          border: '2px solid #fff',
+                          borderRadius: '0.25rem',
+                          ...(window.innerWidth >= 640 ? {
+                            transform: 'rotate(-15deg) translateY(-10px)',
+                            minWidth: '220px',
+                            maxWidth: '90%',
+                            left: '0',
+                            right: 'auto',
+                            borderRadius: '0',
+                          } : {})
+                        }}
+                        onMouseEnter={() => setShowConfetti(true)}
+                        onMouseLeave={() => setShowConfetti(false)}
+                      >
+                        <span role="img" aria-label="clapper">🎬</span> 1 Year Anniversary! <span role="img" aria-label="confetti">🎉</span>
+                      </div>
+                    )}
                     <Card className="retro-card overflow-hidden">
-                      <div className="relative aspect-[2/3] overflow-hidden">
+                      <div className="relative aspect-[2/3] overflow-visible">
                         <img
                           src={movie.posterUrl || "/placeholder.svg"}
                           alt={movie.title}
