@@ -288,5 +288,25 @@ export const moviesData: MonthlyMovies = {
       posterUrl: "https://resizing.flixster.com/D2Dkf2k2sX4IX8bcvVYYflQjGms=/fit-in/705x460/v2/https://resizing.flixster.com/LzxtMnakV6f5Y1CuT_oGY5CWaTU=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzLzVlY2ZkYzYyLTgyZDQtNDZkOC1hYzA0LTA5YzEwZjQ1ZGI2ZC53ZWJw",
       date: "2025-05-20",
     }
-  ]
+  ],
+  "2025-06": [
+    {
+      title: "Khrustalyov, My Car!",
+      year: "1998",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/8/2/1/9/5/82195-khrustalyov-my-car--0-1000-0-1500-crop.jpg?v=e2264cf194",
+      date: "2025-06-03",
+    },
+    {
+      title: "In the Soup",
+      year: "1992",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMTU0NjMxMjkzNl5BMl5BanBnXkFtZTcwMjIxNDYyMQ@@._V1_.jpg",
+      date: "2025-06-10",
+    },
+    {
+      title: "Arizona Dream",
+      year: "1993",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BZTE2N2JiYjUtZTQzMS00YjFjLTg4M2QtNzlkYTE2ZTdlNTA5XkEyXkFqcGc@._V1_.jpg",
+      date: "2025-06-17",
+    }
+  ],
 }
