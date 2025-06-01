@@ -300,7 +300,7 @@ export const moviesData: MonthlyMovies = {
       title: "In the Soup",
       year: "1992",
       posterUrl: "https://m.media-amazon.com/images/M/MV5BMTU0NjMxMjkzNl5BMl5BanBnXkFtZTcwMjIxNDYyMQ@@._V1_.jpg",
-      date: "2025-06-10",
+      date: "2025-06-09",
     },
     {
       title: "Arizona Dream",
