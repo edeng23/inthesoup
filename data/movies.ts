@@ -309,4 +309,36 @@ export const moviesData: MonthlyMovies = {
       date: "2025-06-17",
     }
   ],
+  "2025-07": [
+    {
+      title: "The Night of the Hunter",
+      year: "1955",
+      posterUrl: "https://resizing.flixster.com/UFhzh9uesKzQER-1bUqxfD7PrEk=/fit-in/352x330/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p4360_v_v9_ab.jpg",
+      date: "2025-07-01",
+    },
+    {
+      title: "The Discreet Charm of the Bourgeoisie",
+      year: "1972",
+      posterUrl: "https://s3.amazonaws.com/criterion-production/films/ec5399163d6dca9c04ee961a15f1c863/JegycjW6BfTUczUHnh51sLyJCVKQoy_large.jpg",
+      date: "2025-07-08",
+    },
+    {
+      title: "Taste of Cherry",
+      year: "1997",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/3/2/3/4/5/32345-taste-of-cherry-0-1000-0-1500-crop.jpg?v=64fada0a9a",
+      date: "2025-07-15",
+    },
+    {
+      title: "Buena Vista Social Club",
+      year: "1999",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/4/5/0/1/6/45016-buena-vista-social-club-0-1000-0-1500-crop.jpg?v=77243f7059",
+      date: "2025-07-22",
+    },
+    {
+      title: "Yi Yi",
+      year: "2000",
+      posterUrl: "https://a.ltrbxd.com/resized/sm/upload/7s/h0/6e/0f/hhsYCYVPy1V0eTjkGNGdvpDO2qk-0-1000-0-1500-crop.jpg?v=f8d5b0fe80",
+      date: "2025-07-29",
+    },
+  ]
 }
