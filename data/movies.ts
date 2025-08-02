@@ -340,5 +340,31 @@ export const moviesData: MonthlyMovies = {
       posterUrl: "https://a.ltrbxd.com/resized/sm/upload/7s/h0/6e/0f/hhsYCYVPy1V0eTjkGNGdvpDO2qk-0-1000-0-1500-crop.jpg?v=f8d5b0fe80",
       date: "2025-07-29",
     },
-  ]
+  ],
+  "2025-08": [
+    {
+      title: "High Hopes",
+      year: "1988",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMzMxMGZlMDEtNTVmNC00NzQxLWE4MzUtOWI2NTJhZWE0OTYyXkEyXkFqcGc@._V1_.jpg",
+      date: "2025-08-05",
+    },
+    {
+      title: "A Serious Man",
+      year: "2009",
+      posterUrl: "https://m.media-amazon.com/images/S/pv-target-images/8d534c8df82625436ca55e79acb54779ecfecf121e7e2896b475efa13d5e3cfc.jpg",
+      date: "2025-08-12",
+    },
+    {
+      title: "Dogville",
+      year: "2003",
+      posterUrl: "https://m.media-amazon.com/images/I/51WfVYSFq5L._UF894,1000_QL80_.jpg",
+      date: "2025-08-19",
+    },
+    {
+      title: "Come and See",
+      year: "1985",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BNDlkZmVkZDAtZGFmMS00OWIzLWJkY2YtNWE5NjNhNjhiZGE3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+      date: "2025-08-26",
+    },
+  ],
 }
