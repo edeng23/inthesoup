@@ -364,7 +364,21 @@ export const moviesData: MonthlyMovies = {
       title: "Come and See",
       year: "1985",
       posterUrl: "https://m.media-amazon.com/images/M/MV5BNDlkZmVkZDAtZGFmMS00OWIzLWJkY2YtNWE5NjNhNjhiZGE3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
-      date: "2025-08-26",
+      date: "2025-08-27",
+    },
+  ],
+  "2025-09": [
+    {
+      title: "Still Walking",
+      year: "2008",
+      posterUrl: "https://i.pinimg.com/736x/ed/76/c1/ed76c17de9aa1fd350c5e7ece27c3026.jpg",
+      date: "2025-09-09",
+    },
+    {
+      title: "I'm Still Here",
+      year: "2024",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/thumb/0/0a/I%27m_Still_Here_%282024_film%29_poster.jpg/250px-I%27m_Still_Here_%282024_film%29_poster.jpg",
+      date: "2025-09-16",
     },
   ],
 }
