@@ -381,4 +381,18 @@ export const moviesData: MonthlyMovies = {
       date: "2025-09-16",
     },
   ],
+  "2025-10": [
+    {
+      title: "Don't Look Now",
+      year: "1973",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/b/b8/Dont_look_movieposter.jpg",
+      date: "2025-10-08",
+    },
+    {
+      title: "The Dead Zone",
+      year: "1983",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/7/78/The_Dead_Zone.jpg",
+      date: "2025-10-14",
+    },
+  ],
 }
