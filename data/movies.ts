@@ -123,12 +123,6 @@ export const moviesData: MonthlyMovies = {
       posterUrl: "https://cdn.posteritati.com/posters/000/000/063/268/la-haine-md-web.jpg?height=500&width=350",
       date: "2024-10-22",
     },
-    {
-      title: "Nashville",
-      year: "1975",
-      posterUrl: "https://m.media-amazon.com/images/I/618WL2nqYjL._AC_UF894,1000_QL80_.jpg?height=500&width=350",
-      date: "2024-11-29",
-    },
 
   ],
   "2024-11": [
@@ -149,6 +143,12 @@ export const moviesData: MonthlyMovies = {
       year: "1982",
       posterUrl: "https://m.media-amazon.com/images/M/MV5BMTQyMzE4MjgwMV5BMl5BanBnXkFtZTgwOTEyMzkwMzE@._V1_FMjpg_UX1000_.jpg?height=500&width=350",
       date: "2024-11-26",
+    },
+    {
+      title: "Nashville",
+      year: "1975",
+      posterUrl: "https://m.media-amazon.com/images/I/618WL2nqYjL._AC_UF894,1000_QL80_.jpg?height=500&width=350",
+      date: "2024-11-29",
     },
   ],
   "2024-12": [
