@@ -127,7 +127,7 @@ export const moviesData: MonthlyMovies = {
       title: "Nashville",
       year: "1975",
       posterUrl: "https://m.media-amazon.com/images/I/618WL2nqYjL._AC_UF894,1000_QL80_.jpg?height=500&width=350",
-      date: "2024-11-29",
+      date: "2024-10-29",
     },
 
   ],
@@ -301,12 +301,6 @@ export const moviesData: MonthlyMovies = {
       year: "1992",
       posterUrl: "https://m.media-amazon.com/images/M/MV5BMTU0NjMxMjkzNl5BMl5BanBnXkFtZTcwMjIxNDYyMQ@@._V1_.jpg",
       date: "2025-06-09",
-    },
-    {
-      title: "Arizona Dream",
-      year: "1993",
-      posterUrl: "https://m.media-amazon.com/images/M/MV5BZTE2N2JiYjUtZTQzMS00YjFjLTg4M2QtNzlkYTE2ZTdlNTA5XkEyXkFqcGc@._V1_.jpg",
-      date: "2025-06-17",
     }
   ],
   "2025-07": [
@@ -393,6 +387,32 @@ export const moviesData: MonthlyMovies = {
       year: "1983",
       posterUrl: "https://upload.wikimedia.org/wikipedia/en/7/78/The_Dead_Zone.jpg",
       date: "2025-10-14",
+    },
+  ],
+  "2025-11": [
+    {
+      title: "Arizona Dream",
+      year: "1993",
+      posterUrl: "https://cdn11.bigcommerce.com/s-yzgoj/products/2924758/images/5908280/MOVIF4612__94010.1679562923.500.659.jpg",
+      date: "2025-11-04",
+    },
+    {
+      title: "Fireworks",
+      year: "1997",
+      posterUrl: "https://cdn11.bigcommerce.com/s-yzgoj/images/stencil/1280x1280/products/82238/4864277/apip4u5wg__28914.1625726506.jpg",
+      date: "2025-11-11",
+    },
+    {
+      title: "The Man Who Fell to Earth",
+      year: "1976",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/c/c4/Man_who_fell_to_earth_ver1.jpg",
+      date: "2025-11-18",
+    },
+    {
+      title: "The Celebration",
+      year: "1998",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsRZ0cUdtIN3dujanpbZEswKGEcTuQDNaO4H9udC4NokqYK76W3hrYfPcadsjGsDaezopw&s=10",
+      date: "2025-11-25",
     },
   ],
 }
