@@ -417,9 +417,9 @@ export const moviesData: MonthlyMovies = {
   ],
   "2025-12": [
     {
-      title: "Aftersun",
-      year: "2022",
-      posterUrl: "https://upload.wikimedia.org/wikipedia/en/thumb/1/11/Aftersun.jpg/250px-Aftersun.jpg",
+      title: "Night on Earth",
+      year: "1991",
+      posterUrl: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p55159_p_v10_ad.jpg",
       date: "2025-12-01",
     },
     {
