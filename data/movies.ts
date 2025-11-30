@@ -415,4 +415,36 @@ export const moviesData: MonthlyMovies = {
       date: "2025-11-25",
     },
   ],
+  "2025-12": [
+    {
+      title: "Aftersun",
+      year: "2022",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/thumb/1/11/Aftersun.jpg/250px-Aftersun.jpg",
+      date: "2025-12-01",
+    },
+    {
+      title: "Didi",
+      year: "2024",
+      posterUrl: "https://resizing.flixster.com/z_9x0PalzILuvvYXrgaC2UBqWRU=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzL2RhNjdjZWE3LTBhZTYtNDA3Zi1iZjgzLWFjZDMzY2NiMzU2Mi5qcGc=",
+      date: "2025-12-08",
+    },
+    {
+      title: "Close Up",
+      year: "1990",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9kye1OBy2rWZgHGdNgl88HS04JRR-pX2L_Q&s",
+      date: "2025-12-15",
+    },
+    {
+      title: "The Search for One-eye Jimmy",
+      year: "1994",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BNGVhNGNhNzMtN2Y4NS00NGM1LTliMzAtY2M1MzQ0MzcyYWNlXkEyXkFqcGc@._V1_.jpg",
+      date: "2025-12-22",
+    },
+    {
+      title: "It’s Such a Beautiful Day",
+      year: "2012",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/a/ab/It%27s_Such_A_Beautiful_Day_Poster.jpg",
+      date: "2025-12-29",
+    },
+  ]
 }
