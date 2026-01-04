@@ -441,10 +441,36 @@ export const moviesData: MonthlyMovies = {
       date: "2025-12-22",
     },
     {
-      title: "It’s Such a Beautiful Day",
+      title: "It's Such a Beautiful Day",
       year: "2012",
       posterUrl: "https://upload.wikimedia.org/wikipedia/en/a/ab/It%27s_Such_A_Beautiful_Day_Poster.jpg",
       date: "2025-12-29",
+    },
+  ],
+  "2026-01": [
+    {
+      title: "Aftersun",
+      year: "2022",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/8/6/8/5/5/8/868558-aftersun-0-230-0-345-crop.jpg?v=5ce2118fca",
+      date: "2026-01-06",
+    },
+    {
+      title: "A Scene at the Sea",
+      year: "1991",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/3/7/2/9/3/37293-a-scene-at-the-sea-0-230-0-345-crop.jpg?v=4cbfded7f6",
+      date: "2026-01-13",
+    },
+    {
+      title: "The Hawks and the Sparrows",
+      year: "1966",
+      posterUrl: "https://images.mubicdn.net/images/film/2204/cache-35617-1745490517/image-w1280.jpg?size=800x",
+      date: "2026-01-20",
+    },
+    {
+      title: "Gummo",
+      year: "1997",
+      posterUrl: "https://a.ltrbxd.com/resized/sm/upload/ax/63/ma/r8/54rpZVaJ2PJ9SrqFAYqxY2YAdRB-0-230-0-345-crop.jpg?v=c3d50845ae",
+      date: "2026-01-27",
     },
   ]
 }
