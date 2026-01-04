@@ -446,5 +446,31 @@ export const moviesData: MonthlyMovies = {
       posterUrl: "https://upload.wikimedia.org/wikipedia/en/a/ab/It%27s_Such_A_Beautiful_Day_Poster.jpg",
       date: "2025-12-29",
     },
+  ],
+  "2026-01": [
+    {
+      title: "Aftersun",
+      year: "2022",
+      posterUrl: "https://image.tmdb.org/t/p/w500/7C0X4EY7F9WAugsNFNoVquKxf6k.jpg",
+      date: "2026-01-06",
+    },
+    {
+      title: "A Scene at the Sea",
+      year: "1991",
+      posterUrl: "https://image.tmdb.org/t/p/w500/dLrIY8aKjLqH33YuDhsEwWGq1YQ.jpg",
+      date: "2026-01-13",
+    },
+    {
+      title: "The Hawks and the Sparrows",
+      year: "1966",
+      posterUrl: "https://image.tmdb.org/t/p/w500/sO40An3JnJzBd0mp1lWfm9GIXMu.jpg",
+      date: "2026-01-20",
+    },
+    {
+      title: "Gummo",
+      year: "1997",
+      posterUrl: "https://image.tmdb.org/t/p/w500/azCuVxsGpPUncEv7LofIWkfymPH.jpg",
+      date: "2026-01-27",
+    },
   ]
 }
