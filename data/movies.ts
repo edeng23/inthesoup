@@ -472,5 +472,31 @@ export const moviesData: MonthlyMovies = {
       posterUrl: "https://a.ltrbxd.com/resized/film-poster/3/7/5/0/7/37507-werckmeister-harmonies-0-230-0-345-crop.jpg?v=a3115c9fcb",
       date: "2026-01-27",
     },
+  ],
+  "2026-02": [
+    {
+      title: "Gummo",
+      year: "1997",
+      posterUrl: "https://a.ltrbxd.com/resized/sm/upload/ax/63/ma/r8/54rpZVaJ2PJ9SrqFAYqxY2YAdRB-0-230-0-345-crop.jpg?v=c3d50845ae",
+      date: "2026-02-03",
+    },
+    {
+      title: "Day for Night",
+      year: "1973",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/5/0/8/6/9/50869-day-for-night-0-230-0-345-crop.jpg?v=2330f1bf19",
+      date: "2026-02-10",
+    },
+    {
+      title: "Hard Eight",
+      year: "1996",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/4/7/9/1/3/47913-hard-eight-0-230-0-345-crop.jpg?v=d5198f6351",
+      date: "2026-02-17",
+    },
+    {
+      title: "McCabe & Mrs. Miller",
+      year: "1971",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/3/3/2/1/1/33211-mccabe-mrs-miller-0-230-0-345-crop.jpg",
+      date: "2026-02-24",
+    },
   ]
 }
