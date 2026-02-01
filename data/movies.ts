@@ -467,9 +467,9 @@ export const moviesData: MonthlyMovies = {
       date: "2026-01-20",
     },
     {
-      title: "Gummo",
-      year: "1997",
-      posterUrl: "https://a.ltrbxd.com/resized/sm/upload/ax/63/ma/r8/54rpZVaJ2PJ9SrqFAYqxY2YAdRB-0-230-0-345-crop.jpg?v=c3d50845ae",
+      title: "Werckmeister Harmonies",
+      year: "2000",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/3/7/5/0/7/37507-werckmeister-harmonies-0-230-0-345-crop.jpg?v=a3115c9fcb",
       date: "2026-01-27",
     },
   ]
