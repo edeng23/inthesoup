@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { format, addMonths, parseISO } from "date-fns"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSpring, animated } from "react-spring"
@@ -43,11 +43,9 @@ export default function FilmClub() {
   const [movies, setMovies] = useState<Movie[]>([])
   const [colorScheme, setColorScheme] = useState<ColorScheme>(generateColorScheme())
   const [showConfetti, setShowConfetti] = useState(false)
-  const [windowSize, setWindowSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 0,
-    height: typeof window !== 'undefined' ? window.innerHeight : 0,
-  })
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
   const [confettiTriggered, setConfettiTriggered] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
     const handleResize = () => {
@@ -55,8 +53,10 @@ export default function FilmClub() {
         width: window.innerWidth,
         height: window.innerHeight,
       })
+      setIsDesktop(window.innerWidth >= 640)
     }
 
+    handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
@@ -80,16 +80,15 @@ export default function FilmClub() {
 
   // Helper function to create animated title with words as units
   const renderAnimatedTitle = (text: string) => {
-    // Split by words instead of characters
-    return text.split(' ').map((word, i) => (
+    const words = text.split(' ')
+    return words.map((word, i) => (
       <span
         key={i}
         className="inline-block"
         style={{ '--i': i } as React.CSSProperties}
       >
         {word}
-        {/* Add space after each word except the last one */}
-        {i < text.split(' ').length - 1 ? '\u00A0' : ''}
+        {i < words.length - 1 ? '\u00A0' : ''}
       </span>
     ));
   };
@@ -101,7 +100,7 @@ export default function FilmClub() {
   };
 
   // Find earliest and latest months with data
-  const getNavigationLimits = () => {
+  const { earliest, latest } = useMemo(() => {
     const monthKeys = Object.keys(moviesData).sort();
     if (monthKeys.length === 0) return { earliest: null, latest: null };
 
@@ -109,9 +108,7 @@ export default function FilmClub() {
       earliest: parseISO(`${monthKeys[0]}-01`),
       latest: parseISO(`${monthKeys[monthKeys.length - 1]}-01`)
     };
-  };
-
-  const { earliest, latest } = getNavigationLimits();
+  }, []);
 
   // Check if we're at the earliest or latest month with data
   const isPreviousDisabled = earliest ?
@@ -158,7 +155,7 @@ export default function FilmClub() {
 
       {/* Floating PNGs - circles on mobile only */}
       <motion.div
-        className="absolute top-4 left-4 w-24 h-24 z-5 rounded-full overflow-hidden border-2 border-green-400 sm:hidden"
+        className="absolute top-4 left-4 w-24 h-24 z-[5] rounded-full overflow-hidden border-2 border-green-400 sm:hidden"
         initial={{ y: 0 }}
         animate={{
           y: [0, -5, 0],
@@ -178,7 +175,7 @@ export default function FilmClub() {
         />
       </motion.div>
       <motion.div
-        className="absolute top-4 right-4 w-24 h-24 z-5 rounded-full overflow-hidden border-2 border-green-400 sm:hidden"
+        className="absolute top-4 right-4 w-24 h-24 z-[5] rounded-full overflow-hidden border-2 border-green-400 sm:hidden"
         initial={{ y: 0 }}
         animate={{
           y: [0, -5, 0],
@@ -315,7 +312,7 @@ export default function FilmClub() {
               <AnimatePresence>
                 {movies.map((movie, index) => (
                   <motion.div
-                    key={index}
+                    key={`${movie.title}-${movie.date}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
@@ -341,7 +338,7 @@ export default function FilmClub() {
                           pointerEvents: 'auto',
                           border: '2px solid #fff',
                           borderRadius: '0.25rem',
-                          ...(window.innerWidth >= 640 ? {
+                          ...(isDesktop ? {
                             transform: 'rotate(-15deg) translateY(-10px)',
                             minWidth: '220px',
                             maxWidth: '90%',
@@ -385,7 +382,7 @@ export default function FilmClub() {
 
       {/* Original PNGs at bottom for larger screens */}
       <motion.div
-        className="absolute bottom-4 left-4 w-64 h-auto z-5 hidden sm:block"
+        className="absolute bottom-4 left-4 w-64 h-auto z-[5] hidden sm:block"
         initial={{ y: 0 }}
         animate={{
           y: [0, -8, 0],
@@ -405,7 +402,7 @@ export default function FilmClub() {
         />
       </motion.div>
       <motion.div
-        className="absolute bottom-4 right-4 w-64 h-auto z-5 hidden sm:block"
+        className="absolute bottom-4 right-4 w-64 h-auto z-[5] hidden sm:block"
         initial={{ y: 0 }}
         animate={{
           y: [0, -8, 0],

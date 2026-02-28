@@ -27,7 +27,7 @@ export const moviesData: MonthlyMovies = {
   "2024-07": [
     {
       title: "Dogleg",
-      year:" 2023",
+      year: "2023",
       posterUrl: "https://m.media-amazon.com/images/M/MV5BMGM4NjhjN2UtMjEzNC00NTcxLWI0YjQtZjYyMWExNjVlZjdkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
       date: "2024-07-09",
     },
@@ -133,7 +133,7 @@ export const moviesData: MonthlyMovies = {
   ],
   "2024-11": [
     {
-      title: "Sypmathy for Lady Vengeance",
+      title: "Sympathy for Lady Vengeance",
       year: "2005",
       posterUrl: "https://m.media-amazon.com/images/M/MV5BMDQ4MDM4YjEtN2E3Yy00NDJjLTgzNWUtN2M4ZTVkMGEzMzhiXkEyXkFqcGc@._V1_.jpg?height=500&width=350",
       date: "2024-11-12",
@@ -228,7 +228,7 @@ export const moviesData: MonthlyMovies = {
       title: "O' Lucky Man",
       year: "1973",
       posterUrl: "https://m.media-amazon.com/images/M/MV5BMDkxZDQ4M2MtYTA0OC00YjE1LWEwZTMtNzA3ZGZiZTExNWJhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg?height=500&width=350",
-      date: "2053-03-11",
+      date: "2025-03-11",
     },
     {
       title: "They Shoot Horses, Don't They?",
