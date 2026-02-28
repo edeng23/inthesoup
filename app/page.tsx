@@ -283,7 +283,7 @@ export default function FilmClub() {
           </div>
 
           <motion.div
-            className="retro-screen overflow-auto"
+            className="retro-screen"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
