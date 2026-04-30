@@ -308,6 +308,54 @@ export default function FilmClub() {
               </div>
             </div>
 
+            {movies.length === 0 ? (
+              <motion.div
+                className="flex flex-col items-center justify-center py-16 relative z-10"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+              >
+                <motion.div
+                  className="text-6xl sm:text-8xl mb-6"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  📡
+                </motion.div>
+                <h3
+                  className="wordart-random text-xl sm:text-2xl mb-4"
+                  style={{ "--hue": colorScheme.complementaryHue } as React.CSSProperties}
+                >
+                  On Hiatus
+                </h3>
+                <motion.p
+                  className="text-green-400 text-center text-lg max-w-md leading-relaxed"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  No screenings this month.
+                  <br />
+                  <span className="text-green-300 text-base">We&apos;ll be back with more soup soon.</span>
+                </motion.p>
+                <motion.div
+                  className="mt-8 flex gap-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  {[...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: `hsl(${colorScheme.complementaryHue}, 70%, 50%)` }}
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                    />
+                  ))}
+                </motion.div>
+              </motion.div>
+            ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
               <AnimatePresence>
                 {movies.map((movie, index) => (
@@ -376,6 +424,7 @@ export default function FilmClub() {
                 ))}
               </AnimatePresence>
             </div>
+            )}
           </motion.div>
         </motion.div>
       </animated.div>
