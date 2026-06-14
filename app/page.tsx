@@ -38,10 +38,22 @@ const generateColorScheme = (): ColorScheme => {
   }
 }
 
+// Fixed scheme used for the initial server + first client render so the markup
+// matches during hydration. The randomized scheme is applied on mount (see the
+// effect below), which avoids a React hydration mismatch from Math.random().
+const defaultColorScheme: ColorScheme = {
+  baseHue: 120,
+  complementaryHue: 300,
+  baseSaturation: 70,
+  baseLightness: 50,
+  screenSaturation: 30,
+  screenLightness: 10,
+}
+
 export default function FilmClub() {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [movies, setMovies] = useState<Movie[]>([])
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(generateColorScheme())
+  const [colorScheme, setColorScheme] = useState<ColorScheme>(defaultColorScheme)
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
   const [confettiTriggered, setConfettiTriggered] = useState(false)
