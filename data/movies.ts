@@ -529,19 +529,19 @@ export const moviesData: MonthlyMovies = {
     {
       title: "Pom Poko",
       year: "1994",
-      posterUrl: "",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/4/2/4/7/8/42478-pom-poko-0-230-0-345-crop.jpg?v=887706ae4b",
       date: "2026-06-09",
     },
     {
       title: "Army of Shadows",
       year: "1969",
-      posterUrl: "",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/4/2/4/1/6/42416-army-of-shadows-0-230-0-345-crop.jpg?v=2eee689db8",
       date: "2026-06-23",
     },
     {
       title: "Sentimental Value",
       year: "2025",
-      posterUrl: "",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/9/9/6/7/8/8/996788-sentimental-value-0-230-0-345-crop.jpg?v=08a3943c9e",
       date: "2026-06-30",
     },
   ],
