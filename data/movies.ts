@@ -518,11 +518,31 @@ export const moviesData: MonthlyMovies = {
       posterUrl: "https://a.ltrbxd.com/resized/sm/upload/b7/yw/x0/25/blood%20simple-0-230-0-345-crop.jpg?v=5be2a698f3",
       date: "2026-05-19",
     },
+  ],
+  "2026-06": [
     {
       title: "Dodes'ka-den",
       year: "1970",
       posterUrl: "https://a.ltrbxd.com/resized/film-poster/2/9/9/5/5/29955-dodes-ka-den-0-230-0-345-crop.jpg?v=004c685be0",
-      date: "2026-05-26",
+      date: "2026-06-02",
+    },
+    {
+      title: "Pom Poko",
+      year: "1994",
+      posterUrl: "",
+      date: "2026-06-09",
+    },
+    {
+      title: "Army of Shadows",
+      year: "1969",
+      posterUrl: "",
+      date: "2026-06-23",
+    },
+    {
+      title: "Sentimental Value",
+      year: "2025",
+      posterUrl: "",
+      date: "2026-06-30",
     },
   ],
 }
