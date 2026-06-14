@@ -217,7 +217,7 @@ export default function FilmClub() {
         />
       </motion.div>
 
-      <animated.div style={fadeIn} className="container mx-auto py-12 px-4 relative z-10 overflow-auto flex-1">
+      <animated.div style={fadeIn} className="container mx-auto py-12 px-4 relative z-10 overflow-auto flex-1 min-h-0">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
