@@ -52,12 +52,19 @@ const defaultColorScheme: ColorScheme = {
 
 export default function FilmClub() {
   const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [movies, setMovies] = useState<Movie[]>([])
   const [colorScheme, setColorScheme] = useState<ColorScheme>(defaultColorScheme)
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
   const [confettiTriggered, setConfettiTriggered] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+
+  // Derive the month's movies directly from currentMonth so the very first
+  // render (server + client hydration) already shows the correct screenings
+  // instead of briefly flashing the empty "On Hiatus" state.
+  const movies = useMemo(
+    () => moviesData[format(currentMonth, "yyyy-MM")] || [],
+    [currentMonth]
+  )
 
   useEffect(() => {
     const handleResize = () => {
@@ -75,7 +82,6 @@ export default function FilmClub() {
 
   useEffect(() => {
     const monthKey = format(currentMonth, "yyyy-MM")
-    setMovies(moviesData[monthKey] || [])
     setColorScheme(generateColorScheme())
     if (monthKey === '2025-06') {
       setShowConfetti(true)
@@ -122,11 +128,14 @@ export default function FilmClub() {
     };
   }, []);
 
-  // Check if we're at the earliest or latest month with data
-  const isPreviousDisabled = earliest ?
-    format(currentMonth, "yyyy-MM") === format(earliest, "yyyy-MM") : true;
-  const isNextDisabled = latest ?
-    format(currentMonth, "yyyy-MM") === format(latest, "yyyy-MM") : true;
+  // Disable a direction when there is no month to navigate to on that side.
+  // Using <=/>= (rather than ===) also keeps the buttons correct when the
+  // calendar opens on a month outside the scheduled range (e.g. after the last
+  // screening), where === would leave a dead but clickable button.
+  const isPreviousDisabled = !earliest ||
+    format(currentMonth, "yyyy-MM") <= format(earliest, "yyyy-MM");
+  const isNextDisabled = !latest ||
+    format(currentMonth, "yyyy-MM") >= format(latest, "yyyy-MM");
 
   const handlePreviousMonth = () => {
     const prevMonth = addMonths(currentMonth, -1);
@@ -296,8 +305,8 @@ export default function FilmClub() {
 
           <motion.div
             className="retro-screen overflow-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             style={
               {
@@ -373,9 +382,9 @@ export default function FilmClub() {
                 {movies.map((movie, index) => (
                   <motion.div
                     key={`${movie.title}-${movie.date}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                     className="relative"
                   >
