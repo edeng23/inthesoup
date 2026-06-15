@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { format, addMonths, parseISO } from "date-fns"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSpring, animated } from "react-spring"
@@ -57,6 +57,32 @@ export default function FilmClub() {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
   const [confettiTriggered, setConfettiTriggered] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+  // The page's layout depends entirely on the Tailwind stylesheet (absolute
+  // portraits, the flex column, etc.). On a slow connection the markup can be
+  // visible before that stylesheet has applied — and again briefly during
+  // hydration, when React re-inserts the precedence-managed <link>s — flashing
+  // unstyled content (portraits stacked at the bottom) before it snaps into
+  // place. Keep the root hidden via its own inline style until the stylesheet is
+  // confirmed applied: poll the root's computed `display` (which is `flex` only
+  // once the Tailwind `flex` utility is in effect) and reveal then.
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [styleReady, setStyleReady] = useState(false)
+  useEffect(() => {
+    let raf = 0
+    // Reveal only once the Tailwind stylesheet is confirmed applied: the root's
+    // `flex` utility resolves to `display: flex` only after the stylesheet has
+    // loaded. Until then keep polling (and the root stays hidden), so a slow
+    // stylesheet can never produce a visible flash of unstyled content.
+    const check = () => {
+      if (!rootRef.current || getComputedStyle(rootRef.current).display === "flex") {
+        setStyleReady(true)
+      } else {
+        raf = requestAnimationFrame(check)
+      }
+    }
+    check()
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   // Derive the month's movies directly from currentMonth so the very first
   // render (server + client hydration) already shows the correct screenings
@@ -153,11 +179,13 @@ export default function FilmClub() {
 
   return (
     <div
+      ref={rootRef}
       className="min-h-screen max-h-screen text-green-400 relative overflow-hidden p-4 flex flex-col"
       style={{
         backgroundColor: `hsl(${colorScheme.baseHue}, ${colorScheme.screenSaturation}%, ${colorScheme.screenLightness}%)`,
         height: '100vh',
-        overscrollBehavior: 'none'
+        overscrollBehavior: 'none',
+        visibility: styleReady ? 'visible' : 'hidden'
       }}
     >
       {showConfetti && (
