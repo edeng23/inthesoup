@@ -559,9 +559,9 @@ export const moviesData: MonthlyMovies = {
       date: "2026-07-14",
     },
     {
-      title: "Alice Doesn't Live Here Anymore",
-      year: "1974",
-      posterUrl: "https://www.originalfilmart.com/cdn/shop/products/alice_doesnt_live_here_anymore_1974_original_film_art_5000x.jpg?v=1596952083",
+      title: "Girlfriends",
+      year: "1978",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/8/9/1/7/4/89174-girlfriends-0-1000-0-1500-crop.jpg?v=4fc8c40180",
       date: "2026-07-21",
     },
     {
