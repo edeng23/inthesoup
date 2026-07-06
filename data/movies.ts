@@ -545,4 +545,30 @@ export const moviesData: MonthlyMovies = {
       date: "2026-06-30",
     },
   ],
+  "2026-07": [
+    {
+      title: "Like Father, Like Son",
+      year: "2013",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3Pigv2yXve6PLEYltq3wxbvn1ofq8bTzQRIk5G7cGq6A_V5INMn_KxFw&s=10",
+      date: "2026-07-07",
+    },
+    {
+      title: "Face/Off",
+      year: "1997",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/1/1c/FaceOff_poster.jpg",
+      date: "2026-07-14",
+    },
+    {
+      title: "Alice Doesn't Live Here Anymore",
+      year: "1974",
+      posterUrl: "https://www.originalfilmart.com/cdn/shop/products/alice_doesnt_live_here_anymore_1974_original_film_art_5000x.jpg?v=1596952083",
+      date: "2026-07-21",
+    },
+    {
+      title: "3 Women",
+      year: "1977",
+      posterUrl: "https://cdn.posteritati.com/posters/000/000/073/789/3-women-md-web.jpg",
+      date: "2026-07-28",
+    },
+  ],
 }
