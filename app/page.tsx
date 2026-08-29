@@ -456,7 +456,6 @@ export default function FilmClub() {
                           src={movie.posterUrl || "/placeholder.svg"}
                           alt={movie.title}
                           className="w-full h-full object-cover"
-                          onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
                         />
                       </div>
                       <CardContent className="p-4 relative">

@@ -575,19 +575,19 @@ export const moviesData: MonthlyMovies = {
     {
       title: "Time of the Gypsies",
       year: "1988",
-      posterUrl: "https://upload.wikimedia.org/wikipedia/en/b/bd/Time_of_the_Gypsies.jpg",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BOTRkOTAzMzQtN2JjYi00YmQzLTg1YTYtMzk0ZWQ5N2Q3MDIzXkEyXkFqcGc@._V1_.jpg",
       date: "2026-08-04",
     },
     {
       title: "Straight Time",
       year: "1978",
-      posterUrl: "https://upload.wikimedia.org/wikipedia/en/9/9e/Straight_time.jpg",
+      posterUrl: "https://www.originalfilmart.com/cdn/shop/products/italian_straight_time_original_film_art_spo_5000x.jpg?v=1551805814",
       date: "2026-08-18",
     },
     {
       title: "Chungking Express",
       year: "1994",
-      posterUrl: "https://upload.wikimedia.org/wikipedia/en/c/ca/Chungkingexpress.jpg",
+      posterUrl: "https://cdn.posteritati.com/posters/000/000/069/955/chungking-express-md-web.jpg",
       date: "2026-08-25",
     },
   ],
