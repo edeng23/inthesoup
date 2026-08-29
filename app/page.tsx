@@ -145,29 +145,73 @@ function MarqueeSign({ monthKey }: { monthKey: string }) {
       <div className="pointer-events-none absolute -top-10 left-1/4 h-10 w-px" style={{ background: `linear-gradient(${GOLD_DIM}, transparent)` }} />
       <div className="pointer-events-none absolute -top-10 right-1/4 h-10 w-px" style={{ background: `linear-gradient(${GOLD_DIM}, transparent)` }} />
 
+      {/* Brass bezel. A marquee face is a heavy cast frame, so this is a wide
+          band with a lit top edge and a shaded bottom one rather than a
+          hairline rule — the sign has to read as an object hung on the wall. */}
       <div
-        className="relative px-8 py-10 text-center sm:px-16 sm:py-12"
+        className="relative p-2.5 sm:p-3.5"
         style={{
           background:
-            "linear-gradient(180deg, #1B0C0C 0%, #120808 50%, #1B0C0C 100%)",
-          border: `2px solid ${GOLD_DIM}`,
-          boxShadow: `0 0 0 6px ${VELVET}, 0 0 0 7px ${GOLD_DIM}55, 0 30px 80px rgba(0,0,0,0.7), inset 0 0 60px rgba(231,194,125,0.06)`,
+            "linear-gradient(160deg, #D9BB84 0%, #9C7C43 20%, #7A5C2C 38%, #C9A263 50%, #86673A 66%, #B59558 84%, #6B5029 100%)",
+          borderRadius: "4px",
+          boxShadow: [
+            "inset 0 2px 0 rgba(255,246,226,0.45)",
+            "inset 0 -3px 0 rgba(0,0,0,0.55)",
+            "inset 2px 0 0 rgba(255,246,226,0.14)",
+            "inset -2px 0 0 rgba(0,0,0,0.35)",
+            "0 0 0 1px #2B1D0C",
+            "0 30px 80px rgba(0,0,0,0.85)",
+            `0 0 70px ${GOLD}22`,
+          ].join(", "),
         }}
       >
-        {bulbs.map((b) => (
+        {/* Rivets holding the bezel to the frame */}
+        {[
+          ["6px", "6px"],
+          ["calc(100% - 6px)", "6px"],
+          ["6px", "calc(100% - 6px)"],
+          ["calc(100% - 6px)", "calc(100% - 6px)"],
+        ].map(([left, top]) => (
           <span
-            key={b.i}
-            className="pointer-events-none absolute h-2.5 w-2.5 rounded-full"
+            key={`${left}-${top}`}
+            className="pointer-events-none absolute h-1.5 w-1.5 rounded-full"
             style={{
-              left: b.left,
-              top: b.top,
+              left,
+              top,
               transform: "translate(-50%, -50%)",
-              background: GOLD,
-              boxShadow: `0 0 8px ${GOLD}, 0 0 16px ${GOLD}80`,
-              animation: `bulb 1.6s ${(b.i % 6) * 0.18}s infinite ease-in-out`,
+              background: "radial-gradient(circle at 35% 30%, #FBEBC6, #6B5029)",
+              boxShadow: "0 1px 1px rgba(0,0,0,0.6)",
             }}
           />
         ))}
+
+        <div
+          className="relative px-8 py-11 text-center sm:px-20 sm:py-14"
+          style={{
+            // Opaque, and darker than the wall behind it, so the panel reads as
+            // a solid face with the letters lit on it.
+            background:
+              "radial-gradient(125% 115% at 50% 0%, #1D0D0E 0%, #120809 52%, #090404 100%)",
+            boxShadow:
+              "inset 0 0 90px rgba(0,0,0,0.95), inset 0 0 34px rgba(231,194,125,0.09), inset 0 2px 5px rgba(0,0,0,0.9)",
+          }}
+        >
+        <div className="pointer-events-none absolute inset-3 sm:inset-4">
+          {bulbs.map((b) => (
+            <span
+              key={b.i}
+              className="absolute h-2.5 w-2.5 rounded-full sm:h-3 sm:w-3"
+              style={{
+                left: b.left,
+                top: b.top,
+                transform: "translate(-50%, -50%)",
+                background: "radial-gradient(circle at 38% 32%, #FFF6DE, #E7C27D 55%, #B98F45)",
+                boxShadow: `0 0 10px ${GOLD}, 0 0 26px ${GOLD}90, 0 0 44px ${GOLD}40`,
+                animation: `bulb 1.6s ${(b.i % 6) * 0.18}s infinite ease-in-out`,
+              }}
+            />
+          ))}
+        </div>
 
         {/* The club's own mark, lit by the sign and bobbing very slightly. */}
         <motion.img
@@ -233,6 +277,7 @@ function MarqueeSign({ monthKey }: { monthKey: string }) {
           >
             Location announced on the day
           </span>
+        </div>
         </div>
       </div>
     </motion.div>
