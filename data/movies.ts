@@ -40,7 +40,7 @@ export const moviesData: MonthlyMovies = {
     {
       title: "Hearts of Darkness: A Filmmaker's Apocalypse",
       year: "1991",
-      posterUrl: "https://studiocloudstoragelive.blob.core.windows.net/campaigns/poster_024071.jpg?height=500&width=350",
+      posterUrl: "https://resizing.flixster.com/qWss7ban-ICNgr2y2rM4AQ8at2Y=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzL2Y0OGU5YWYzLTU1MzMtNGU4My1hYzEwLWUxZjU4MGJkZGYwYi5qcGc=",
       date: "2024-07-23",
     },
     {
@@ -155,7 +155,7 @@ export const moviesData: MonthlyMovies = {
     {
       title: "The Searchers",
       year: "1956",
-      posterUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SearchersPoster-BillGold.jpg/640px-SearchersPoster-BillGold.jpg?height=500&width=350",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SearchersPoster-BillGold.jpg/960px-SearchersPoster-BillGold.jpg",
       date: "2024-12-03",
     },
     {

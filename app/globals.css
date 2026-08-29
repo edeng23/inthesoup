@@ -4,17 +4,19 @@
 
 html,
 body {
-  height: 100%;
-  overflow-x: hidden;
-  position: relative;
+  min-height: 100%;
+  /* `clip` suppresses horizontal overflow without turning <body> into its own
+     scroll container the way `hidden` does — which would break window
+     scrolling, anchors and the sticky chrome. */
+  overflow-x: clip;
   margin: 0;
   padding: 0;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  overscroll-behavior: none;
-  /* Prevents bounce effects on mobile */
+  /* Matches the foot of the page's gradient so overscroll never flashes white. */
+  background: #060303;
+  font-family: var(--font-serif), Georgia, serif;
 }
 
 @layer utilities {
@@ -102,7 +104,7 @@ body {
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
 }
 
@@ -115,5 +117,90 @@ body {
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+/* Film grain shimmer: jump the texture around so it reads as moving film. */
+@keyframes grain-shift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  10% {
+    transform: translate3d(-4%, -4%, 0);
+  }
+  20% {
+    transform: translate3d(-8%, 2%, 0);
+  }
+  30% {
+    transform: translate3d(4%, -6%, 0);
+  }
+  40% {
+    transform: translate3d(-2%, 6%, 0);
+  }
+  50% {
+    transform: translate3d(-6%, 4%, 0);
+  }
+  60% {
+    transform: translate3d(6%, 0, 0);
+  }
+  70% {
+    transform: translate3d(0, 6%, 0);
+  }
+  80% {
+    transform: translate3d(2%, -4%, 0);
+  }
+  90% {
+    transform: translate3d(-4%, 2%, 0);
+  }
+}
+.grain-shift {
+  animation: grain-shift 0.9s steps(1) infinite;
+  will-change: transform;
+}
+
+/* Marquee bulbs chasing around the sign. */
+@keyframes bulb {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(0.86);
+  }
+}
+
+/* Infinite title ticker. The track holds its content twice, so translating it
+   by half its width and looping is seamless. */
+@keyframes ticker {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.ticker-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: ticker var(--ticker-duration, 40s) linear infinite;
+  will-change: transform;
+}
+.ticker:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+/* Posters are art: never let the browser's smoothing mush them. */
+.poster-img {
+  image-rendering: -webkit-optimize-contrast;
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain-shift,
+  .ticker-track {
+    animation: none !important;
   }
 }
