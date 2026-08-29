@@ -1,526 +1,763 @@
 "use client"
 
-import type React from "react"
+import { useMemo, useState } from "react"
+import { format, parseISO } from "date-fns"
+import { AnimatePresence, motion } from "framer-motion"
+import {
+  allScreenings,
+  defaultMonthIndex,
+  monthKeys,
+  monthLabel,
+  screeningsByMonth,
+  totalScreenings,
+  type Screening,
+} from "@/lib/screenings"
+import Grain from "@/components/Grain"
 
-import { useState, useEffect, useMemo, useRef } from "react"
-import { format, addMonths, parseISO } from "date-fns"
-import { motion, AnimatePresence } from "framer-motion"
-import { useSpring, animated } from "react-spring"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Calendar, MapPin } from "lucide-react"
-import { moviesData, type Movie } from "@/data/movies"
-import "@/styles/wordart.css"
-import RetroAsteroids from "../components/RetroAsteroids"
-import Confetti from 'react-confetti'
+const VELVET = "#0D0707"
+const GOLD = "#E7C27D"
+const GOLD_DIM = "#9C7C43"
+const CRIMSON = "#6E1216"
 
-// Define the color scheme type
-type ColorScheme = {
-  baseHue: number
-  complementaryHue: number
-  baseSaturation: number
-  baseLightness: number
-  screenSaturation: number
-  screenLightness: number
-}
+/** Dissolves the bottom edge of the hosts' cut-outs into the room. */
+const FADE_OUT = "linear-gradient(to bottom, #000 72%, transparent 97%)"
 
-// Define the generateColorScheme function outside the component
-const generateColorScheme = (): ColorScheme => {
-  const baseHue = Math.floor(Math.random() * 360)
-  const complementaryHue = (baseHue + 180) % 360
-  return {
-    baseHue,
-    complementaryHue,
-    baseSaturation: 70,
-    baseLightness: 50,
-    screenSaturation: 30,
-    screenLightness: 10,
+export default function InTheSoup() {
+  const [monthIndex, setMonthIndex] = useState(() => defaultMonthIndex())
+  // While a month change is pending the curtains are closed; the swap happens
+  // behind them, so the audience never sees the scenery being moved.
+  const [pending, setPending] = useState<number | null>(null)
+
+  const monthKey = monthKeys[monthIndex]
+  const films = screeningsByMonth[monthKey] ?? []
+  const closed = pending !== null
+
+  const go = (next: number) => {
+    if (closed || next < 0 || next > monthKeys.length - 1) return
+    setPending(next)
   }
-}
-
-// Fixed scheme used for the initial server + first client render so the markup
-// matches during hydration. The randomized scheme is applied on mount (see the
-// effect below), which avoids a React hydration mismatch from Math.random().
-const defaultColorScheme: ColorScheme = {
-  baseHue: 120,
-  complementaryHue: 300,
-  baseSaturation: 70,
-  baseLightness: 50,
-  screenSaturation: 30,
-  screenLightness: 10,
-}
-
-export default function FilmClub() {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(defaultColorScheme)
-  const [showConfetti, setShowConfetti] = useState(false)
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
-  const [confettiTriggered, setConfettiTriggered] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(false)
-  // The page's layout depends entirely on the Tailwind stylesheet (absolute
-  // portraits, the flex column, etc.). On a slow connection the markup can be
-  // visible before that stylesheet has applied — and again briefly during
-  // hydration, when React re-inserts the precedence-managed <link>s — flashing
-  // unstyled content (portraits stacked at the bottom) before it snaps into
-  // place. Keep the root hidden via its own inline style until the stylesheet is
-  // confirmed applied: poll the root's computed `display` (which is `flex` only
-  // once the Tailwind `flex` utility is in effect) and reveal then.
-  const rootRef = useRef<HTMLDivElement>(null)
-  const [styleReady, setStyleReady] = useState(false)
-  useEffect(() => {
-    let raf = 0
-    // Reveal only once the Tailwind stylesheet is confirmed applied: the root's
-    // `flex` utility resolves to `display: flex` only after the stylesheet has
-    // loaded. Until then keep polling (and the root stays hidden), so a slow
-    // stylesheet can never produce a visible flash of unstyled content.
-    const check = () => {
-      if (!rootRef.current || getComputedStyle(rootRef.current).display === "flex") {
-        setStyleReady(true)
-      } else {
-        raf = requestAnimationFrame(check)
-      }
-    }
-    check()
-    return () => cancelAnimationFrame(raf)
-  }, [])
-
-  // Derive the month's movies directly from currentMonth so the very first
-  // render (server + client hydration) already shows the correct screenings
-  // instead of briefly flashing the empty "On Hiatus" state.
-  const movies = useMemo(
-    () => moviesData[format(currentMonth, "yyyy-MM")] || [],
-    [currentMonth]
-  )
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      })
-      setIsDesktop(window.innerWidth >= 640)
-    }
-
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  useEffect(() => {
-    const monthKey = format(currentMonth, "yyyy-MM")
-    setColorScheme(generateColorScheme())
-    if (monthKey === '2025-06') {
-      setShowConfetti(true)
-    } else {
-      setShowConfetti(false)
-    }
-  }, [currentMonth])
-
-  const fadeIn = useSpring({
-    from: { opacity: 0 },
-    to: { opacity: 1 },
-    config: { duration: 1000 },
-  })
-
-  // Helper function to create animated title with words as units
-  const renderAnimatedTitle = (text: string) => {
-    const words = text.split(' ')
-    return words.map((word, i) => (
-      <span
-        key={i}
-        className="inline-block"
-        style={{ '--i': i } as React.CSSProperties}
-      >
-        {word}
-        {i < words.length - 1 ? '\u00A0' : ''}
-      </span>
-    ));
-  };
-
-  // Helper to check if a month has movie data
-  const hasMoviesForMonth = (date: Date) => {
-    const monthKey = format(date, "yyyy-MM");
-    return !!moviesData[monthKey] && moviesData[monthKey].length > 0;
-  };
-
-  // Find earliest and latest months with data
-  const { earliest, latest } = useMemo(() => {
-    const monthKeys = Object.keys(moviesData).sort();
-    if (monthKeys.length === 0) return { earliest: null, latest: null };
-
-    return {
-      earliest: parseISO(`${monthKeys[0]}-01`),
-      latest: parseISO(`${monthKeys[monthKeys.length - 1]}-01`)
-    };
-  }, []);
-
-  // Disable a direction when there is no month to navigate to on that side.
-  // Using <=/>= (rather than ===) also keeps the buttons correct when the
-  // calendar opens on a month outside the scheduled range (e.g. after the last
-  // screening), where === would leave a dead but clickable button.
-  const isPreviousDisabled = !earliest ||
-    format(currentMonth, "yyyy-MM") <= format(earliest, "yyyy-MM");
-  const isNextDisabled = !latest ||
-    format(currentMonth, "yyyy-MM") >= format(latest, "yyyy-MM");
-
-  const handlePreviousMonth = () => {
-    const prevMonth = addMonths(currentMonth, -1);
-    if (hasMoviesForMonth(prevMonth) || (earliest && format(prevMonth, "yyyy-MM") >= format(earliest, "yyyy-MM"))) {
-      setCurrentMonth(prevMonth);
-    }
-  };
-
-  const handleNextMonth = () => {
-    const nextMonth = addMonths(currentMonth, 1);
-    if (hasMoviesForMonth(nextMonth) || (latest && format(nextMonth, "yyyy-MM") <= format(latest, "yyyy-MM"))) {
-      setCurrentMonth(nextMonth);
-    }
-  };
 
   return (
     <div
-      ref={rootRef}
-      className="min-h-screen max-h-screen text-green-400 relative overflow-hidden p-4 flex flex-col"
+      className="relative min-h-screen overflow-x-hidden font-[family-name:var(--font-serif)]"
       style={{
-        backgroundColor: `hsl(${colorScheme.baseHue}, ${colorScheme.screenSaturation}%, ${colorScheme.screenLightness}%)`,
-        height: '100vh',
-        overscrollBehavior: 'none',
-        visibility: styleReady ? 'visible' : 'hidden'
+        background: `radial-gradient(120% 80% at 50% -10%, #2A0F10 0%, ${VELVET} 55%, #060303 100%)`,
+        color: "#F3E6CE",
       }}
     >
-      {showConfetti && (
-        <Confetti
-          width={windowSize.width}
-          height={windowSize.height}
-          recycle={false}
-          numberOfPieces={200}
-          gravity={0.3}
-          style={{ position: 'fixed', top: 0, left: 0, zIndex: 9999 }}
-        />
-      )}
-      
-      {/* Retro Asteroids Background */}
-      <RetroAsteroids colorScheme={colorScheme} />
-
-      {/* Floating PNGs - circles on mobile only */}
-      <motion.div
-        className="absolute top-4 left-4 w-24 h-24 z-[5] rounded-full overflow-hidden border-2 border-green-400 sm:hidden"
-        initial={{ y: 0 }}
-        animate={{
-          y: [0, -5, 0],
-          rotate: [-2, 2, -2]
+      <Grain opacity={0.2} blend="overlay" />
+      <ProjectorBeam />
+      <Curtains
+        closed={closed}
+        onClosed={() => {
+          if (pending !== null) setMonthIndex(pending)
+          setPending(null)
         }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        whileHover={{ scale: 1.1 }}
-      >
-        <img
-          src="/eden.png"
-          alt="Eden"
-          className="w-full h-full object-cover"
-        />
-      </motion.div>
-      <motion.div
-        className="absolute top-4 right-4 w-24 h-24 z-[5] rounded-full overflow-hidden border-2 border-green-400 sm:hidden"
-        initial={{ y: 0 }}
-        animate={{
-          y: [0, -5, 0],
-          rotate: [2, -2, 2]
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.5
-        }}
-        whileHover={{ scale: 1.1 }}
-      >
-        <img
-          src="/noga.png"
-          alt="Noga"
-          className="w-full h-full object-cover"
-        />
-      </motion.div>
+      />
 
-      <animated.div style={fadeIn} className="container mx-auto py-12 px-4 relative z-10 overflow-auto flex-1">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col gap-8"
-        >
-          <div className="flex flex-col items-center justify-center gap-6 mb-4">
-            <h1
-              className="wordart-outline text-center text-3xl"
-              style={
-                {
-                  "--hue": colorScheme.complementaryHue,
-                  "--saturation": `${colorScheme.baseSaturation}%`,
-                  "--lightness": `${colorScheme.baseLightness}%`,
-                  zIndex: 20,
-                  position: "relative"
-                } as React.CSSProperties
-              }
-            >
-              {renderAnimatedTitle(`${format(currentMonth, "MMMM")} In the Soup`)}
-            </h1>
+      <div className="relative z-10 mx-auto max-w-6xl px-5 pb-32 pt-10 sm:pt-16">
+        {/* The sign, with the two of them standing out front like lobby
+            standees. On narrow screens they move below it instead. */}
+        <div className="relative">
+          <MarqueeSign monthKey={monthKey} />
+          <Standee src="/eden.png" name="Eden" side="left" delay={0.35} />
+          <Standee src="/noga.png" name="Noga" side="right" delay={0.5} />
+        </div>
 
-            <div className="flex items-center justify-center gap-6">
-              <Button
-                className="retro-button relative overflow-hidden"
-                onClick={handlePreviousMonth}
-                disabled={isPreviousDisabled}
-                style={{
-                  boxShadow: `0 6px 0 #083f08, 0 8px 10px rgba(0,0,0,0.5)`,
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.2s ease',
-                  opacity: isPreviousDisabled ? 0.5 : 1,
-                  cursor: isPreviousDisabled ? 'not-allowed' : 'pointer'
-                }}
-                onMouseDown={(e) => {
-                  if (isPreviousDisabled) return;
-                  e.currentTarget.style.transform = 'translateY(2px)';
-                  e.currentTarget.style.boxShadow = '0 2px 0 #083f08, 0 2px 5px rgba(0,0,0,0.5)';
-                }}
-                onMouseUp={(e) => {
-                  if (isPreviousDisabled) return;
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 0 #083f08, 0 8px 10px rgba(0,0,0,0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  if (isPreviousDisabled) return;
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 0 #083f08, 0 8px 10px rgba(0,0,0,0.5)';
-                }}
-              >
-                <ChevronLeft className="h-5 w-5 mr-1" /> Previous
-              </Button>
+        <StandeesMobile />
 
-              <Button
-                className="retro-button relative overflow-hidden"
-                onClick={handleNextMonth}
-                disabled={isNextDisabled}
-                style={{
-                  boxShadow: `0 6px 0 #083f08, 0 8px 10px rgba(0,0,0,0.5)`,
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.2s ease',
-                  opacity: isNextDisabled ? 0.5 : 1,
-                  cursor: isNextDisabled ? 'not-allowed' : 'pointer'
-                }}
-                onMouseDown={(e) => {
-                  if (isNextDisabled) return;
-                  e.currentTarget.style.transform = 'translateY(2px)';
-                  e.currentTarget.style.boxShadow = '0 2px 0 #083f08, 0 2px 5px rgba(0,0,0,0.5)';
-                }}
-                onMouseUp={(e) => {
-                  if (isNextDisabled) return;
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 0 #083f08, 0 8px 10px rgba(0,0,0,0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  if (isNextDisabled) return;
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 0 #083f08, 0 8px 10px rgba(0,0,0,0.5)';
-                }}
-              >
-                Next <ChevronRight className="h-5 w-5 ml-1" />
-              </Button>
-            </div>
-          </div>
-
-          <motion.div
-            className="retro-screen overflow-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            style={
-              {
-                "--hue": colorScheme.baseHue,
-                "--saturation": `${colorScheme.screenSaturation}%`,
-                "--lightness": `${colorScheme.screenLightness}%`,
-              } as React.CSSProperties
-            }
+        {/* Programme controls -------------------------------------------- */}
+        <div className="mt-10 flex items-center justify-center gap-8 sm:mt-14">
+          <BrassArrow
+            dir="left"
+            disabled={monthIndex === 0 || closed}
+            onClick={() => go(monthIndex - 1)}
+          />
+          <div
+            className="text-center font-[family-name:var(--font-display)] text-sm tracking-[0.4em]"
+            style={{ color: GOLD_DIM }}
           >
-            <div className="text-center mb-8 relative z-10">
-              <h2
-                className="wordart-random mb-4"
-                style={{ "--hue": colorScheme.complementaryHue } as React.CSSProperties}
-              >
-                Screenings
-              </h2>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <MapPin className="h-5 w-5 text-green-400" />
-                <p className="text-lg text-green-400">Location announced on the day</p>
-              </div>
-            </div>
+            {films.length} {films.length === 1 ? "feature" : "features"}
+          </div>
+          <BrassArrow
+            dir="right"
+            disabled={monthIndex === monthKeys.length - 1 || closed}
+            onClick={() => go(monthIndex + 1)}
+          />
+        </div>
 
-            {movies.length === 0 ? (
-              <motion.div
-                className="flex flex-col items-center justify-center py-16 relative z-10"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-              >
-                <motion.div
-                  className="text-6xl sm:text-8xl mb-6"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  📡
-                </motion.div>
-                <h3
-                  className="wordart-random text-xl sm:text-2xl mb-4"
-                  style={{ "--hue": colorScheme.complementaryHue } as React.CSSProperties}
-                >
-                  On Hiatus
-                </h3>
-                <motion.p
-                  className="text-green-400 text-center text-lg max-w-md leading-relaxed"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  No screenings this month.
-                  <br />
-                  <span className="text-green-300 text-base">We&apos;ll be back with more soup soon.</span>
-                </motion.p>
-                <motion.div
-                  className="mt-8 flex gap-3"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  {[...Array(3)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: `hsl(${colorScheme.complementaryHue}, 70%, 50%)` }}
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
-                    />
-                  ))}
-                </motion.div>
-              </motion.div>
-            ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-              <AnimatePresence>
-                {movies.map((movie, index) => (
-                  <motion.div
-                    key={`${movie.title}-${movie.date}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="relative"
-                  >
-                    {movie.title === "In the Soup" && (
-                      <div
-                        className="absolute left-0 right-0 top-0 text-white text-center px-2 py-1 font-bold shadow-lg select-none w-full sm:left-0 sm:right-auto sm:-top-3 sm:px-8 sm:py-1 sm:font-bold sm:rounded-none sm:rotate-[-15deg] sm:min-w-[220px] sm:max-w-[90%] sm:border-2 sm:border-white"
-                        style={{
-                          background: 'linear-gradient(45deg, #4a00e0, #8e2de2, #ff6b6b)',
-                          backgroundSize: '200%',
-                          animation: 'gradient 8s ease infinite',
-                          textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                          boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                          transform: 'none',
-                          zIndex: 50,
-                          fontWeight: 'bold',
-                          fontSize: '0.95rem',
-                          letterSpacing: '0.03em',
-                          minWidth: '0',
-                          maxWidth: '100%',
-                          pointerEvents: 'auto',
-                          border: '2px solid #fff',
-                          borderRadius: '0.25rem',
-                          ...(isDesktop ? {
-                            transform: 'rotate(-15deg) translateY(-10px)',
-                            minWidth: '220px',
-                            maxWidth: '90%',
-                            left: '0',
-                            right: 'auto',
-                            borderRadius: '0',
-                          } : {})
-                        }}
-                        onMouseEnter={() => setShowConfetti(true)}
-                        onMouseLeave={() => setShowConfetti(false)}
-                      >
-                        <span role="img" aria-label="clapper">🎬</span> 1 Year Anniversary! <span role="img" aria-label="confetti">🎉</span>
-                      </div>
-                    )}
-                    <Card className="retro-card overflow-hidden">
-                      <div className="relative aspect-[2/3] overflow-visible">
-                        <img
-                          src={movie.posterUrl || "/placeholder.svg"}
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <CardContent className="p-4 relative">
-                        <h3 className="font-semibold text-green-400 break-words" style={{
-                          fontSize: movie.title.length > 30 ? '0.875rem' : movie.title.length > 20 ? '1rem' : '1.25rem'
-                        }} title={movie.title}>{movie.title}</h3>
-                        <p className="text-green-300">{movie.year}</p>
-                        <div className="mt-2 pt-2 border-t border-green-700">
-                          <p className="font-medium text-green-400">{format(parseISO(movie.date), "EEEE, MMMM d")}</p>
-                          <p className="text-green-300">Omelettes: 20:00 | Screening: 21:00</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-            )}
-          </motion.div>
-        </motion.div>
-      </animated.div>
+        {/* Tickets --------------------------------------------------------- */}
+        <div className="mt-16 flex flex-col items-center gap-10 sm:mt-20 sm:gap-12">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={monthKey}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex w-full flex-col items-center gap-10 sm:gap-12"
+            >
+              {films.map((film, i) => (
+                <Ticket key={film.title} film={film} index={i} />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-      {/* Original PNGs at bottom for larger screens */}
-      <motion.div
-        className="absolute bottom-4 left-4 w-64 h-auto z-[5] hidden sm:block"
-        initial={{ y: 0 }}
-        animate={{
-          y: [0, -8, 0],
-          x: [0, -4, 0]
-        }}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        whileHover={{ scale: 1.05, y: -15 }}
-      >
-        <img
-          src="/eden.png"
-          alt="Eden"
-          className="w-full h-auto"
-        />
-      </motion.div>
-      <motion.div
-        className="absolute bottom-4 right-4 w-64 h-auto z-[5] hidden sm:block"
-        initial={{ y: 0 }}
-        animate={{
-          y: [0, -8, 0],
-          x: [0, 4, 0]
-        }}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1
-        }}
-        whileHover={{ scale: 1.05, y: -15 }}
-      >
-        <img
-          src="/noga.png"
-          alt="Noga"
-          className="w-full h-auto"
-        />
-      </motion.div>
+        <TheWholePot />
+      </div>
+
+      <ProgrammeTicker />
     </div>
   )
 }
 
+/* -------------------------------------------------------------------------- */
+
+/** The bulb-lit sign over the door. Bulbs chase around the perimeter. */
+function MarqueeSign({ monthKey }: { monthKey: string }) {
+  // Bulbs are laid out as evenly-spaced percentages along each edge.
+  const bulbs = useMemo(() => {
+    const out: { left: string; top: string; i: number }[] = []
+    const perSide = 14
+    let i = 0
+    for (let n = 0; n < perSide; n++) {
+      const p = `${(n / (perSide - 1)) * 100}%`
+      out.push({ left: p, top: "0%", i: i++ })
+      out.push({ left: p, top: "100%", i: i++ })
+    }
+    for (let n = 1; n < 5; n++) {
+      const p = `${(n / 5) * 100}%`
+      out.push({ left: "0%", top: p, i: i++ })
+      out.push({ left: "100%", top: p, i: i++ })
+    }
+    return out
+  }, [])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      className="relative mx-auto max-w-3xl"
+    >
+      {/* Hanging rods */}
+      <div className="pointer-events-none absolute -top-10 left-1/4 h-10 w-px" style={{ background: `linear-gradient(${GOLD_DIM}, transparent)` }} />
+      <div className="pointer-events-none absolute -top-10 right-1/4 h-10 w-px" style={{ background: `linear-gradient(${GOLD_DIM}, transparent)` }} />
+
+      {/* Brass bezel. A marquee face is a heavy cast frame, so this is a wide
+          band with a lit top edge and a shaded bottom one rather than a
+          hairline rule — the sign has to read as an object hung on the wall. */}
+      <div
+        className="relative p-2.5 sm:p-3.5"
+        style={{
+          background:
+            "linear-gradient(160deg, #D9BB84 0%, #9C7C43 20%, #7A5C2C 38%, #C9A263 50%, #86673A 66%, #B59558 84%, #6B5029 100%)",
+          borderRadius: "4px",
+          boxShadow: [
+            "inset 0 2px 0 rgba(255,246,226,0.45)",
+            "inset 0 -3px 0 rgba(0,0,0,0.55)",
+            "inset 2px 0 0 rgba(255,246,226,0.14)",
+            "inset -2px 0 0 rgba(0,0,0,0.35)",
+            "0 0 0 1px #2B1D0C",
+            "0 30px 80px rgba(0,0,0,0.85)",
+            `0 0 70px ${GOLD}22`,
+          ].join(", "),
+        }}
+      >
+        {/* Rivets holding the bezel to the frame */}
+        {[
+          ["6px", "6px"],
+          ["calc(100% - 6px)", "6px"],
+          ["6px", "calc(100% - 6px)"],
+          ["calc(100% - 6px)", "calc(100% - 6px)"],
+        ].map(([left, top]) => (
+          <span
+            key={`${left}-${top}`}
+            className="pointer-events-none absolute h-1.5 w-1.5 rounded-full"
+            style={{
+              left,
+              top,
+              transform: "translate(-50%, -50%)",
+              background: "radial-gradient(circle at 35% 30%, #FBEBC6, #6B5029)",
+              boxShadow: "0 1px 1px rgba(0,0,0,0.6)",
+            }}
+          />
+        ))}
+
+        <div
+          className="relative px-8 py-11 text-center sm:px-20 sm:py-14"
+          style={{
+            // Opaque, and darker than the wall behind it, so the panel reads as
+            // a solid face with the letters lit on it.
+            background:
+              "radial-gradient(125% 115% at 50% 0%, #1D0D0E 0%, #120809 52%, #090404 100%)",
+            boxShadow:
+              "inset 0 0 90px rgba(0,0,0,0.95), inset 0 0 34px rgba(231,194,125,0.09), inset 0 2px 5px rgba(0,0,0,0.9)",
+          }}
+        >
+        <div className="pointer-events-none absolute inset-3 sm:inset-4">
+          {bulbs.map((b) => (
+            <span
+              key={b.i}
+              className="absolute h-2.5 w-2.5 rounded-full sm:h-3 sm:w-3"
+              style={{
+                left: b.left,
+                top: b.top,
+                transform: "translate(-50%, -50%)",
+                background: "radial-gradient(circle at 38% 32%, #FFF6DE, #E7C27D 55%, #B98F45)",
+                boxShadow: `0 0 10px ${GOLD}, 0 0 26px ${GOLD}90, 0 0 44px ${GOLD}40`,
+                animation: `bulb 1.6s ${(b.i % 6) * 0.18}s infinite ease-in-out`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* The club's own mark, lit by the sign and bobbing very slightly. */}
+        <motion.img
+          src="/soup.png"
+          alt="A bowl of soup"
+          className="mx-auto mb-1 h-16 w-16 sm:h-24 sm:w-24"
+          animate={{ y: [0, -5, 0], rotate: [-1.5, 1.5, -1.5] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            filter: `drop-shadow(0 0 22px ${GOLD}70) drop-shadow(0 8px 14px rgba(0,0,0,0.6))`,
+          }}
+        />
+
+        <div
+          className="font-[family-name:var(--font-display)] leading-[0.9]"
+          style={{
+            fontSize: "clamp(2.6rem, 9vw, 5.6rem)",
+            letterSpacing: "0.04em",
+            color: "#FFF4DE",
+            textShadow: `0 0 18px ${GOLD}99, 0 0 46px ${GOLD}55, 0 2px 0 ${GOLD_DIM}`,
+          }}
+        >
+          In the Soup
+        </div>
+
+        <div
+          className="mx-auto my-4 h-px w-3/4"
+          style={{ background: `linear-gradient(90deg, transparent, ${GOLD_DIM}, transparent)` }}
+        />
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={monthKey}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className="font-[family-name:var(--font-display)] tracking-[0.32em]"
+            style={{ fontSize: "clamp(0.9rem, 2.4vw, 1.4rem)", color: GOLD }}
+          >
+            {monthLabel(monthKey).toUpperCase()}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* The house rules, stacked the way a real marquee breaks its lines —
+            on one line the sentence can't grow past ~1.35rem before it runs
+            into the sign's frame. Cormorant also runs optically small, so this
+            needs more size than a sans-serif caption would. */}
+        <div className="mt-5 flex flex-col items-center gap-1 italic tracking-wide">
+          <span
+            style={{
+              fontSize: "clamp(1.2rem, 2.7vw, 1.9rem)",
+              color: "#EBD4A8",
+            }}
+          >
+            Omelettes at eight · Screening at nine
+          </span>
+          <span
+            style={{
+              fontSize: "clamp(1.05rem, 2.1vw, 1.5rem)",
+              color: "#C9A97Fcc",
+            }}
+          >
+            Location announced on the day
+          </span>
+        </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One screening as a cinema ticket: poster in the counterfoil window, details
+ * on the stub, torn along a perforation of punched notches.
+ */
+function Ticket({ film, index }: { film: Screening; index: number }) {
+  const tilt = index % 2 === 0 ? -1.1 : 1.1
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 40, rotate: tilt * 2 }}
+      animate={{ opacity: 1, y: 0, rotate: tilt }}
+      transition={{ duration: 0.8, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ rotate: 0, y: -10, scale: 1.02 }}
+      className="relative w-full max-w-3xl"
+      style={{ transformStyle: "preserve-3d" }}
+    >
+      <div
+        className="relative flex overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, #F6E7C8 0%, #EFDCB6 45%, #E4CDA1 100%)",
+          color: "#2A1408",
+          boxShadow: "0 26px 60px rgba(0,0,0,0.55)",
+          borderRadius: "6px",
+        }}
+      >
+        {/* Counterfoil: the poster */}
+        <div className="relative w-[38%] shrink-0 sm:w-[30%]">
+          <img
+            src={film.posterUrl}
+            alt={film.title}
+            loading="lazy"
+            className="poster-img h-full w-full object-cover"
+            style={{ minHeight: 210 }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(42,20,8,0.25), transparent 45%)",
+              mixBlendMode: "multiply",
+            }}
+          />
+        </div>
+
+        {/* Perforation */}
+        <div className="relative w-0">
+          <div
+            className="absolute inset-y-3 left-0 w-px"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(180deg, #2A140855 0 6px, transparent 6px 12px)",
+            }}
+          />
+          <span
+            className="absolute -top-2.5 left-0 h-5 w-5 -translate-x-1/2 rounded-full"
+            style={{ background: VELVET }}
+          />
+          <span
+            className="absolute -bottom-2.5 left-0 h-5 w-5 -translate-x-1/2 rounded-full"
+            style={{ background: VELVET }}
+          />
+        </div>
+
+        {/* Stub */}
+        <div className="relative flex flex-1 flex-col justify-between p-4 sm:p-7">
+          {/* Box-office stamp, struck across the empty middle of the stub */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 rotate-[-14deg] sm:block"
+            style={{
+              border: "2px solid #8E2B1B",
+              color: "#8E2B1B",
+              opacity: 0.22,
+              padding: "0.5rem 1rem",
+              borderRadius: "4px",
+            }}
+          >
+            <div className="font-[family-name:var(--font-display)] text-2xl leading-none tracking-[0.16em]">
+              {format(parseISO(film.date), "MMM").toUpperCase()}
+            </div>
+            <div className="font-[family-name:var(--font-display)] text-center text-xs tracking-[0.3em]">
+              {format(parseISO(film.date), "yyyy")}
+            </div>
+          </div>
+
+          <div>
+            <div
+              className="mb-2 flex items-center justify-between font-[family-name:var(--font-display)] text-[11px] tracking-[0.28em]"
+              style={{ color: "#7A4A24" }}
+            >
+              <span>Admit one</span>
+              <span>№ {String(film.no).padStart(3, "0")}</span>
+            </div>
+            <h3
+              className="font-[family-name:var(--font-display)] leading-[0.95]"
+              style={{ fontSize: "clamp(1.7rem, 4.4vw, 3rem)", letterSpacing: "0.01em" }}
+            >
+              {film.title}
+            </h3>
+            <div
+              className="mt-1 text-lg italic"
+              style={{ color: "#7A4A24" }}
+            >
+              {film.year}
+            </div>
+          </div>
+
+          <div
+            className="mt-5 flex flex-wrap items-end justify-between gap-3 border-t pt-3 font-[family-name:var(--font-display)] tracking-[0.2em]"
+            style={{ borderColor: "#2A140833" }}
+          >
+            <div>
+              <div className="text-[10px]" style={{ color: "#7A4A24" }}>
+                Date
+              </div>
+              <div className="text-base sm:text-xl">
+                {format(parseISO(film.date), "EEE d MMM yyyy").toUpperCase()}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px]" style={{ color: "#7A4A24" }}>
+                Doors
+              </div>
+              <div className="text-base sm:text-xl">20:00</div>
+            </div>
+            <div>
+              <div className="text-[10px]" style={{ color: "#7A4A24" }}>
+                Feature
+              </div>
+              <div className="text-base sm:text-xl">21:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.article>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+
+function BrassArrow({
+  dir,
+  disabled,
+  onClick,
+}: {
+  dir: "left" | "right"
+  disabled: boolean
+  onClick: () => void
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={dir === "left" ? "Previous month" : "Next month"}
+      whileHover={disabled ? undefined : { scale: 1.08 }}
+      whileTap={disabled ? undefined : { scale: 0.94 }}
+      className="flex h-14 w-14 items-center justify-center rounded-full text-2xl"
+      style={{
+        border: `1px solid ${disabled ? "#5a482c55" : GOLD_DIM}`,
+        color: disabled ? "#5a482c" : GOLD,
+        background:
+          "radial-gradient(circle at 30% 25%, rgba(231,194,125,0.14), rgba(0,0,0,0.35))",
+        boxShadow: disabled ? "none" : `0 0 22px ${GOLD}22`,
+        cursor: disabled ? "not-allowed" : "pointer",
+      }}
+    >
+      {dir === "left" ? "‹" : "›"}
+    </motion.button>
+  )
+}
+
+/** Velvet curtains that close over a month change and reopen on the new one. */
+function Curtains({ closed, onClosed }: { closed: boolean; onClosed: () => void }) {
+  const panel = (side: "left" | "right") => (
+    <motion.div
+      className="fixed top-0 z-[90] h-full w-1/2"
+      style={{
+        [side]: 0,
+        background: `repeating-linear-gradient(90deg, ${CRIMSON} 0px, #8E1B20 14px, #4E0C10 34px, ${CRIMSON} 48px)`,
+        boxShadow: "inset 0 0 120px rgba(0,0,0,0.75)",
+      }}
+      initial={false}
+      animate={{ x: closed ? "0%" : side === "left" ? "-100%" : "100%" }}
+      transition={{ duration: closed ? 0.5 : 0.75, ease: closed ? [0.7, 0, 0.84, 0] : [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => {
+        if (closed && side === "left") onClosed()
+      }}
+    >
+      <div
+        className="absolute inset-y-0 w-8"
+        style={{
+          [side === "left" ? "right" : "left"]: 0,
+          background:
+            side === "left"
+              ? "linear-gradient(90deg, transparent, rgba(0,0,0,0.6))"
+              : "linear-gradient(270deg, transparent, rgba(0,0,0,0.6))",
+        }}
+      />
+    </motion.div>
+  )
+
+  return (
+    <>
+      {panel("left")}
+      {panel("right")}
+    </>
+  )
+}
+
+/** A wash of projector light from above the sign. */
+function ProjectorBeam() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[70vh]"
+      style={{
+        background:
+          "conic-gradient(from 175deg at 50% -20%, transparent 0deg, rgba(231,194,125,0.10) 8deg, rgba(231,194,125,0.02) 16deg, transparent 24deg)",
+        filter: "blur(18px)",
+      }}
+    />
+  )
+}
+
+/**
+ * A cut-out of one of the hosts, stood in front of the marquee the way a
+ * cinema props a cardboard standee in its lobby: lit from the sign, drifting
+ * very slightly, with a brass nameplate at their feet.
+ */
+function Standee({
+  src,
+  name,
+  side,
+  delay,
+}: {
+  src: string
+  name: string
+  side: "left" | "right"
+  delay: number
+}) {
+  const drift = side === "left" ? [-1.6, 1.4, -1.6] : [1.6, -1.4, 1.6]
+
+  return (
+    <motion.div
+      className="absolute bottom-[-18px] z-20 hidden lg:block"
+      style={{ [side]: "-1.5%", width: "clamp(135px, 13vw, 200px)" }}
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 1, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <motion.div
+        animate={{ y: [0, -9, 0], rotate: drift }}
+        transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay }}
+        whileHover={{ scale: 1.06, y: -16 }}
+      >
+        {/* Sign-light spill behind them */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-[-18%] top-[6%] h-[70%]"
+          style={{
+            background: `radial-gradient(ellipse at 50% 40%, ${GOLD}2e, transparent 68%)`,
+            filter: "blur(18px)",
+          }}
+        />
+        <img
+          src={src}
+          alt={name}
+          className="relative w-full"
+          style={{
+            filter: "drop-shadow(0 22px 26px rgba(0,0,0,0.7)) saturate(0.92)",
+            // The photos are chest-up crops; dissolving the lower edge stops
+            // them reading as rectangles pasted onto the wall.
+            maskImage: FADE_OUT,
+            WebkitMaskImage: FADE_OUT,
+          }}
+        />
+      </motion.div>
+
+    </motion.div>
+  )
+}
+
+/** Below `lg` there is no room beside the sign, so they stand under it. */
+function StandeesMobile() {
+  return (
+    <div className="mt-8 flex items-end justify-center gap-6 lg:hidden">
+      {[
+        { src: "/eden.png", name: "Eden", drift: [-1.6, 1.4, -1.6] },
+        { src: "/noga.png", name: "Noga", drift: [1.6, -1.4, 1.6] },
+      ].map((p, i) => (
+        <motion.div
+          key={p.name}
+          className="w-28 sm:w-36"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 + i * 0.12 }}
+        >
+          <motion.img
+            src={p.src}
+            alt={p.name}
+            className="w-full"
+            style={{
+              filter: "drop-shadow(0 16px 20px rgba(0,0,0,0.7))",
+              maskImage: FADE_OUT,
+              WebkitMaskImage: FADE_OUT,
+            }}
+            animate={{ y: [0, -6, 0], rotate: p.drift }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
+          />
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * The lobby wall: every film the club has ever run, hung in gold hairline
+ * frames and dimmed to house lights. Pointing at one brings it up to full
+ * colour, and the wall label underneath reads out what you're looking at.
+ */
+function TheWholePot() {
+  const [active, setActive] = useState<Screening | null>(null)
+
+  return (
+    <section className="mt-28" onPointerLeave={() => setActive(null)}>
+      <div className="mb-8 text-center">
+        <div
+          className="mx-auto mb-5 h-px w-24"
+          style={{ background: `linear-gradient(90deg, transparent, ${GOLD_DIM}, transparent)` }}
+        />
+        <h2
+          className="font-[family-name:var(--font-display)] leading-none"
+          style={{
+            fontSize: "clamp(1.9rem, 5.5vw, 3.4rem)",
+            color: "#FFF4DE",
+            textShadow: `0 0 22px ${GOLD}55`,
+            letterSpacing: "0.03em",
+          }}
+        >
+          The Whole Pot
+        </h2>
+        <div
+          className="mt-3 text-sm italic"
+          style={{ color: "#C9A97Faa" }}
+        >
+          Everything we&apos;ve projected since {monthLabel(monthKeys[0])}
+        </div>
+      </div>
+
+      <div
+        className="p-3 sm:p-5"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.035), rgba(0,0,0,0.25))",
+          border: `1px solid ${GOLD_DIM}33`,
+          boxShadow: "inset 0 0 70px rgba(0,0,0,0.6)",
+        }}
+      >
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3 lg:grid-cols-9">
+          {allScreenings.map((film) => (
+            <motion.div
+              key={film.no}
+              className="relative cursor-pointer"
+              style={{ aspectRatio: "2 / 3" }}
+              initial="rest"
+              whileHover="lit"
+              animate="rest"
+              onHoverStart={() => setActive(film)}
+              variants={{
+                rest: { scale: 1, zIndex: 1 },
+                lit: { scale: 1.16, zIndex: 30 },
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+              title={`${film.title} (${film.year})`}
+            >
+              <motion.img
+                src={film.posterUrl}
+                alt={film.title}
+                loading="lazy"
+                className="poster-img h-full w-full object-cover"
+                variants={{
+                  rest: {
+                    filter: "sepia(0.32) saturate(0.75) brightness(0.6)",
+                    boxShadow: `0 0 0 1px ${GOLD_DIM}44`,
+                  },
+                  lit: {
+                    filter: "sepia(0) saturate(1.05) brightness(1)",
+                    boxShadow: `0 0 0 1px ${GOLD}, 0 18px 40px rgba(0,0,0,0.75)`,
+                  },
+                }}
+                transition={{ duration: 0.35 }}
+              />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Wall label */}
+      <div
+        className="mt-5 flex min-h-[3.25rem] items-center justify-center px-4 text-center"
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active ? active.no : "idle"}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22 }}
+          >
+            {active ? (
+              <>
+                <span
+                  className="font-[family-name:var(--font-display)] tracking-[0.14em]"
+                  style={{ fontSize: "clamp(1.1rem, 3vw, 1.7rem)", color: "#FFF4DE" }}
+                >
+                  {active.title}
+                </span>
+                <span className="mx-3 italic" style={{ color: "#C9A97F99" }}>
+                  {active.year}
+                </span>
+                <span
+                  className="font-[family-name:var(--font-display)] text-xs tracking-[0.28em]"
+                  style={{ color: GOLD_DIM }}
+                >
+                  № {String(active.no).padStart(3, "0")} ·{" "}
+                  {format(parseISO(active.date), "d MMM yyyy").toUpperCase()}
+                </span>
+              </>
+            ) : (
+              <span
+                className="font-[family-name:var(--font-display)] text-xs tracking-[0.36em]"
+                style={{ color: GOLD_DIM }}
+              >
+                {totalScreenings} films · {monthKeys.length} months
+              </span>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </section>
+  )
+}
+
+/** Every title we've ever shown, running along the bottom of the house. */
+function ProgrammeTicker() {
+  const titles = useMemo(() => allScreenings.map((s) => s.title), [])
+  const strip = [...titles, ...titles]
+
+  return (
+    <div
+      className="ticker fixed inset-x-0 bottom-0 z-[80] overflow-hidden py-3"
+      style={{
+        background: "rgba(6,3,3,0.9)",
+        borderTop: `1px solid ${GOLD_DIM}44`,
+        backdropFilter: "blur(6px)",
+      }}
+    >
+      <div
+        className="ticker-track font-[family-name:var(--font-display)] text-sm tracking-[0.28em]"
+        style={{ ["--ticker-duration" as string]: "160s", color: `${GOLD}bb` }}
+      >
+        {strip.map((t, i) => (
+          <span key={i} className="px-5">
+            {t.toUpperCase()}
+            <span style={{ color: `${GOLD}55` }} className="pl-5">
+              ✦
+            </span>
+          </span>
+        ))}
+      </div>
+      <span className="sr-only">{totalScreenings} films shown to date</span>
+    </div>
+  )
+}
