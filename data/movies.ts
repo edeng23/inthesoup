@@ -585,4 +585,30 @@ export const moviesData: MonthlyMovies = {
       date: "2026-08-25",
     },
   ],
+  "2026-09": [
+    {
+      title: "Girlfriends",
+      year: "1978",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrHIXy8t4c4MiPXlHdirVLtWnc5nMcM-Fy6dAbYion1qV5K2D5RYnSuTXwg4ObFtbAK1Be42i-wVcYuYxFiYAMsGLxZxbKSmGiK2Q1RoM&s=10",
+      date: "2026-09-01",
+    },
+    {
+      title: "Meantime",
+      year: "1983",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8UsqCaUm3EWfjd3d0rpkP-H9pA3rO0WpJIvniw2077752ieQHOi9QIHR9&s=10",
+      date: "2026-09-08",
+    },
+    {
+      title: "Shoot the Piano Player",
+      year: "1960",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgBgJ0Gp5Shv5AL3a7_sS0gu6gknSY6H6oQYNM2YJ2RHZTsLvWUHpUbfE&s=10",
+      date: "2026-09-15",
+    },
+    {
+      title: "Portrait of a Lady on Fire",
+      year: "2019",
+      posterUrl: "https://a.ltrbxd.com/resized/film-poster/4/6/0/8/3/0/460830-portrait-of-a-lady-on-fire-0-1000-0-1500-crop.jpg?v=79b0f67aa9",
+      date: "2026-09-29",
+    },
+  ],
 }
