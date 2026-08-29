@@ -559,12 +559,6 @@ export const moviesData: MonthlyMovies = {
       date: "2026-07-14",
     },
     {
-      title: "Girlfriends",
-      year: "1978",
-      posterUrl: "https://a.ltrbxd.com/resized/film-poster/8/9/1/7/4/89174-girlfriends-0-1000-0-1500-crop.jpg?v=4fc8c40180",
-      date: "2026-07-21",
-    },
-    {
       title: "3 Women",
       year: "1977",
       posterUrl: "https://cdn.posteritati.com/posters/000/000/073/789/3-women-md-web.jpg",
