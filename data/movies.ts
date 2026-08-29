@@ -263,8 +263,8 @@ export const moviesData: MonthlyMovies = {
       date: "2025-04-15",
     },
     {
-     title: "Right Around Midnight", 
-     year: "1996",
+     title: "Round About Midnight", 
+     year: "1999",
      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJPDY_FLTUfQqpk6NMRWGjGILf518BV4IO_Q&s",
      date: "2025-04-22",
     },
