@@ -571,4 +571,24 @@ export const moviesData: MonthlyMovies = {
       date: "2026-07-28",
     },
   ],
+  "2026-08": [
+    {
+      title: "Time of the Gypsies",
+      year: "1988",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/b/bd/Time_of_the_Gypsies.jpg",
+      date: "2026-08-04",
+    },
+    {
+      title: "Straight Time",
+      year: "1978",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/9/9e/Straight_time.jpg",
+      date: "2026-08-18",
+    },
+    {
+      title: "Chungking Express",
+      year: "1994",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/c/ca/Chungkingexpress.jpg",
+      date: "2026-08-25",
+    },
+  ],
 }
