@@ -587,9 +587,9 @@ export const moviesData: MonthlyMovies = {
   ],
   "2026-09": [
     {
-      title: "Girlfriends",
-      year: "1978",
-      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrHIXy8t4c4MiPXlHdirVLtWnc5nMcM-Fy6dAbYion1qV5K2D5RYnSuTXwg4ObFtbAK1Be42i-wVcYuYxFiYAMsGLxZxbKSmGiK2Q1RoM&s=10",
+      title: "3 Colours: Red",
+      year: "1994",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMTQ0YTQyYzItNGEzMi00NmI4LWJkOTMtOWMyMjAwMWEzYTZhXkEyXkFqcGc@._V1_.jpg",
       date: "2026-09-01",
     },
     {
@@ -599,9 +599,9 @@ export const moviesData: MonthlyMovies = {
       date: "2026-09-08",
     },
     {
-      title: "3 Colours: Red",
-      year: "1994",
-      posterUrl: "https://m.media-amazon.com/images/M/MV5BMTQ0YTQyYzItNGEzMi00NmI4LWJkOTMtOWMyMjAwMWEzYTZhXkEyXkFqcGc@._V1_.jpg",
+      title: "Girlfriends",
+      year: "1978",
+      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrHIXy8t4c4MiPXlHdirVLtWnc5nMcM-Fy6dAbYion1qV5K2D5RYnSuTXwg4ObFtbAK1Be42i-wVcYuYxFiYAMsGLxZxbKSmGiK2Q1RoM&s=10",
       date: "2026-09-15",
     },
     {
