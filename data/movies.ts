@@ -599,9 +599,9 @@ export const moviesData: MonthlyMovies = {
       date: "2026-09-08",
     },
     {
-      title: "Shoot the Piano Player",
-      year: "1960",
-      posterUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgBgJ0Gp5Shv5AL3a7_sS0gu6gknSY6H6oQYNM2YJ2RHZTsLvWUHpUbfE&s=10",
+      title: "3 Colours: Red",
+      year: "1994",
+      posterUrl: "https://m.media-amazon.com/images/M/MV5BMTQ0YTQyYzItNGEzMi00NmI4LWJkOTMtOWMyMjAwMWEzYTZhXkEyXkFqcGc@._V1_.jpg",
       date: "2026-09-15",
     },
     {
