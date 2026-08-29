@@ -2,17 +2,20 @@ import { format, parseISO } from "date-fns"
 import { monthLabel, type Screening } from "@/lib/screenings"
 
 /**
- * Draws the month's programme as a shareable poster on a canvas.
+ * Draws the month's programme as a printable poster on a canvas.
  *
  * Canvas rather than a DOM screenshot: it uses the page's already-loaded
- * webfonts directly, exports crisply at any size, and — importantly — only
- * ever touches same-origin images, so the canvas is never tainted. Film
- * artwork is deliberately left out: some of the poster hosts we link to send
- * no CORS headers, which would make the export fail for certain months.
+ * webfonts directly and exports at print resolution. Film artwork comes
+ * through /api/poster-image so every image is same-origin — several of the
+ * hosts we link to send no CORS headers, and drawing one of those straight
+ * onto the canvas would taint it and make the export fail.
+ *
+ * The sheet is A4 landscape: 1754 × 1240 at 150dpi, rendered at 2× for a
+ * true 300dpi print.
  */
 
-export const POSTER_W = 1080
-export const POSTER_H = 1620
+export const POSTER_W = 1754
+export const POSTER_H = 1240
 
 export type PosterStyleId = "marquee" | "playbill" | "ticket" | "neon"
 
@@ -46,6 +49,8 @@ function family(variable: string, fallback: string) {
 const displayFont = () => family("--font-display", "Impact, sans-serif")
 const serifFont = () => family("--font-serif", "Georgia, serif")
 
+const cache = new Map<string, HTMLImageElement | null>()
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -56,6 +61,19 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
+/** Film artwork, routed through our own origin and remembered between renders. */
+async function loadPoster(url: string): Promise<HTMLImageElement | null> {
+  if (cache.has(url)) return cache.get(url) ?? null
+  try {
+    const img = await loadImage(`/api/poster-image?url=${encodeURIComponent(url)}`)
+    cache.set(url, img)
+    return img
+  } catch {
+    cache.set(url, null)
+    return null
+  }
+}
+
 /** Shrinks `size` until `text` fits `maxWidth`. */
 function fit(
   ctx: CanvasRenderingContext2D,
@@ -63,20 +81,19 @@ function fit(
   maxWidth: number,
   font: string,
   size: number,
-  min = 16,
+  min = 12,
   spacing = 0
 ) {
   let s = size
   while (s > min) {
     ctx.font = `${s}px ${font}`
     if (measure(ctx, text, spacing) <= maxWidth) break
-    s -= 2
+    s -= 1
   }
   ctx.font = `${s}px ${font}`
   return s
 }
 
-/** Width of `text` including manual letter spacing. */
 function measure(ctx: CanvasRenderingContext2D, text: string, spacing = 0) {
   return ctx.measureText(text).width + spacing * Math.max(0, text.length - 1)
 }
@@ -94,13 +111,10 @@ function drawText(
 ) {
   const width = measure(ctx, text, spacing)
   let cursor = align === "center" ? x - width / 2 : align === "right" ? x - width : x
-  const previous = ctx.textAlign
-  ctx.textAlign = "left"
   for (const char of text) {
     ctx.fillText(char, cursor, y)
     cursor += ctx.measureText(char).width + spacing
   }
-  ctx.textAlign = previous
   return width
 }
 
@@ -120,9 +134,64 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
   return lines
 }
 
+/** `object-fit: cover` for canvas. */
+function drawCover(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  const scale = Math.max(w / img.width, h / img.height)
+  const dw = img.width * scale
+  const dh = img.height * scale
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(x, y, w, h)
+  ctx.clip()
+  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh)
+  ctx.restore()
+}
+
+/** Stands in for artwork that wouldn't load, so a plate is never just a hole. */
+function fallbackPlate(
+  ctx: CanvasRenderingContext2D,
+  film: Screening,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  bg: string,
+  fg: string
+) {
+  ctx.fillStyle = bg
+  ctx.fillRect(x, y, w, h)
+  ctx.fillStyle = fg
+  const size = Math.max(14, Math.round(w * 0.1))
+  ctx.font = `${size}px ${displayFont()}`
+  const lines = wrap(ctx, film.title.toUpperCase(), w - 24)
+  let ly = y + h / 2 - ((lines.length - 1) * size * 1.15) / 2
+  for (const line of lines) {
+    drawText(ctx, line, x + w / 2, ly)
+    ly += size * 1.15
+  }
+}
+
+/** Even row of poster plates, centred in the given area. */
+function posterRow(areaX: number, areaW: number, count: number, maxW: number, gap: number) {
+  const w = Math.max(80, Math.min(maxW, (areaW - gap * (count - 1)) / Math.max(count, 1)))
+  const total = w * count + gap * (count - 1)
+  return { w, h: w * 1.5, x0: areaX + (areaW - total) / 2, gap }
+}
+
 /**
- * Draws one of the hosts, dissolving the bottom of the crop into `fade` so the
- * cut-out doesn't end in a hard rectangle — the same treatment as on the site.
+ * Draws one of the hosts, dissolving the bottom of the crop so the cut-out
+ * doesn't end in a hard rectangle — the same treatment as on the site.
+ *
+ * The fade is cut out of the image's own alpha on an offscreen canvas rather
+ * than painted over in the background colour, so it works over a gradient,
+ * a photo or paper stock without leaving a visible patch.
  */
 function drawHost(
   ctx: CanvasRenderingContext2D,
@@ -130,46 +199,55 @@ function drawHost(
   x: number,
   bottom: number,
   width: number,
-  fade: string,
   filter?: string
 ) {
   const height = (img.height / img.width) * width
   const top = bottom - height
-  ctx.save()
-  if (filter) ctx.filter = filter
-  ctx.drawImage(img, x, top, width, height)
-  ctx.restore()
 
-  const gradient = ctx.createLinearGradient(0, top + height * 0.55, 0, bottom)
-  gradient.addColorStop(0, `${fade}00`)
-  gradient.addColorStop(1, fade)
-  ctx.fillStyle = gradient
-  ctx.fillRect(x, top + height * 0.55, width, height * 0.45)
+  const supersample = 2
+  const off = document.createElement("canvas")
+  off.width = Math.ceil(width * supersample)
+  off.height = Math.ceil(height * supersample)
+  const o = off.getContext("2d")
+  if (!o) return
+
+  if (filter) o.filter = filter
+  o.drawImage(img, 0, 0, off.width, off.height)
+  o.filter = "none"
+
+  o.globalCompositeOperation = "destination-out"
+  const fade = o.createLinearGradient(0, off.height * 0.58, 0, off.height)
+  fade.addColorStop(0, "rgba(0,0,0,0)")
+  fade.addColorStop(1, "rgba(0,0,0,1)")
+  o.fillStyle = fade
+  o.fillRect(0, off.height * 0.58, off.width, off.height * 0.42)
+
+  ctx.drawImage(off, x, top, width, height)
 }
 
-/** A ring of lit bulbs inset from the edge of a rectangle. */
+/** A ring of lit bulbs around a rectangle. */
 function bulbRing(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   w: number,
   h: number,
-  perSide: number,
+  across: number,
+  down: number,
   radius: number
 ) {
   const dots: [number, number][] = []
-  for (let i = 0; i < perSide; i++) {
-    const t = i / (perSide - 1)
+  for (let i = 0; i < across; i++) {
+    const t = i / (across - 1)
     dots.push([x + t * w, y], [x + t * w, y + h])
   }
-  const down = Math.max(2, Math.round(perSide * 0.42))
   for (let i = 1; i < down; i++) {
     const t = i / down
     dots.push([x, y + t * h], [x + w, y + t * h])
   }
   for (const [cx, cy] of dots) {
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 4)
-    glow.addColorStop(0, "rgba(231,194,125,0.55)")
+    glow.addColorStop(0, "rgba(231,194,125,0.5)")
     glow.addColorStop(1, "rgba(231,194,125,0)")
     ctx.fillStyle = glow
     ctx.fillRect(cx - radius * 4, cy - radius * 4, radius * 8, radius * 8)
@@ -209,15 +287,13 @@ function roundRect(
   ctx.closePath()
 }
 
-/** Paper speckle, so the flat stock doesn't read as a screen fill. */
+/** Paper speckle, so flat stock doesn't read as a screen fill. */
 function speckle(ctx: CanvasRenderingContext2D, count: number, color: string) {
   ctx.save()
   ctx.fillStyle = color
   for (let i = 0; i < count; i++) {
-    const x = Math.random() * POSTER_W
-    const y = Math.random() * POSTER_H
     ctx.globalAlpha = Math.random() * 0.06
-    ctx.fillRect(x, y, 1.5, 1.5)
+    ctx.fillRect(Math.random() * POSTER_W, Math.random() * POSTER_H, 1.5, 1.5)
   }
   ctx.restore()
 }
@@ -225,6 +301,7 @@ function speckle(ctx: CanvasRenderingContext2D, count: number, color: string) {
 type Ctx = {
   ctx: CanvasRenderingContext2D
   films: Screening[]
+  art: (HTMLImageElement | null)[]
   monthKey: string
   eden: HTMLImageElement
   noga: HTMLImageElement
@@ -232,51 +309,20 @@ type Ctx = {
 }
 
 const dayLine = (film: Screening) =>
-  format(parseISO(film.date), "EEEE d MMMM").toUpperCase()
-
-/* -------------------------------------------------------------------------- */
-/* layout                                                                      */
-
-/**
- * Spreads `count` entries down the band between `top` and `bottom`, capped at
- * `maxStep` so a two-film month doesn't drift apart, and centred so a
- * four-film month doesn't crowd the footer. Returns the baseline of the first
- * entry's title and the step between entries.
- */
-function filmLayout(
-  top: number,
-  bottom: number,
-  count: number,
-  maxStep: number,
-  entryH: number,
-  ascent: number
-) {
-  const available = bottom - top
-  const step = Math.min(maxStep, available / Math.max(count, 1))
-  const blockH = (count - 1) * step + entryH
-  return { step, first: top + Math.max(0, (available - blockH) / 2) + ascent }
-}
+  format(parseISO(film.date), "EEE d MMMM").toUpperCase()
 
 /* -------------------------------------------------------------------------- */
 /* styles                                                                      */
 
-function drawMarquee({ ctx, films, monthKey, eden, noga, soup }: Ctx) {
-  const bg = ctx.createRadialGradient(
-    POSTER_W / 2,
-    -200,
-    50,
-    POSTER_W / 2,
-    POSTER_H * 0.7,
-    POSTER_H
-  )
+function drawMarquee({ ctx, films, art, monthKey, eden, noga, soup }: Ctx) {
+  const bg = ctx.createRadialGradient(POSTER_W / 2, -160, 40, POSTER_W / 2, POSTER_H, POSTER_W)
   bg.addColorStop(0, "#2A0F10")
   bg.addColorStop(0.55, "#0D0707")
   bg.addColorStop(1, "#060303")
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, POSTER_W, POSTER_H)
 
-  // Brass bezel
-  const m = 56
+  const m = 34
   const brass = ctx.createLinearGradient(m, m, POSTER_W - m, POSTER_H - m)
   brass.addColorStop(0, "#D9BB84")
   brass.addColorStop(0.2, "#9C7C43")
@@ -288,14 +334,14 @@ function drawMarquee({ ctx, films, monthKey, eden, noga, soup }: Ctx) {
   ctx.fillStyle = brass
   ctx.fillRect(m, m, POSTER_W - m * 2, POSTER_H - m * 2)
 
-  const b = 18
+  const b = 15
   const face = ctx.createRadialGradient(
     POSTER_W / 2,
     m + b,
     40,
     POSTER_W / 2,
     POSTER_H / 2,
-    POSTER_H * 0.8
+    POSTER_W * 0.7
   )
   face.addColorStop(0, "#1D0D0E")
   face.addColorStop(0.52, "#120809")
@@ -303,309 +349,309 @@ function drawMarquee({ ctx, films, monthKey, eden, noga, soup }: Ctx) {
   ctx.fillStyle = face
   ctx.fillRect(m + b, m + b, POSTER_W - (m + b) * 2, POSTER_H - (m + b) * 2)
 
-  const inset = m + b + 30
-  bulbRing(ctx, inset, inset, POSTER_W - inset * 2, POSTER_H - inset * 2, 11, 9)
+  const inset = m + b + 26
+  bulbRing(ctx, inset, inset, POSTER_W - inset * 2, POSTER_H - inset * 2, 15, 5, 8)
 
-  const cx = POSTER_W / 2
-
-  // Hosts first: anything drawn after them reads as being in front.
-  const hostW = 165
-  drawHost(ctx, eden, m + b + 20, POSTER_H - m - b - 8, hostW, "#0A0505")
-  drawHost(
-    ctx,
-    noga,
-    POSTER_W - m - b - hostW - 20,
-    POSTER_H - m - b - 8,
-    hostW,
-    "#0A0505"
-  )
-
-  const soupW = 190
-  ctx.drawImage(soup, cx - soupW / 2, 168, soupW, soupW)
+  // Left column: the sign
+  const lx = 300
+  const soupW = 120
+  ctx.drawImage(soup, lx - soupW / 2, 370, soupW, soupW)
 
   ctx.fillStyle = "#FFF4DE"
   ctx.shadowColor = "rgba(231,194,125,0.6)"
-  ctx.shadowBlur = 40
-  fit(ctx, "IN THE SOUP", POSTER_W - 340, displayFont(), 148, 60, 4)
-  drawText(ctx, "IN THE SOUP", cx, 470, { spacing: 4 })
+  ctx.shadowBlur = 34
+  fit(ctx, "IN THE SOUP", 400, displayFont(), 96, 40, 3)
+  drawText(ctx, "IN THE SOUP", lx, 590, { spacing: 3 })
   ctx.shadowBlur = 0
 
   ctx.strokeStyle = GOLD_DIM
   ctx.lineWidth = 1.5
   ctx.beginPath()
-  ctx.moveTo(cx - 260, 512)
-  ctx.lineTo(cx + 260, 512)
+  ctx.moveTo(lx - 170, 628)
+  ctx.lineTo(lx + 170, 628)
   ctx.stroke()
 
   ctx.fillStyle = GOLD
-  ctx.font = `44px ${displayFont()}`
-  drawText(ctx, monthLabel(monthKey).toUpperCase(), cx, 578, { spacing: 14 })
-
-  // A four-film month has to give up some air between entries.
-  const tight = films.length >= 4
-  const { step, first } = filmLayout(
-    tight ? 610 : 640,
-    1250,
-    films.length,
-    208,
-    tight ? 96 : 112,
-    tight ? 54 : 62
-  )
-  let y = first
-  for (const film of films) {
-    ctx.fillStyle = CREAM
-    fit(ctx, film.title.toUpperCase(), POSTER_W - 300, displayFont(), tight ? 70 : 82, 34, 2)
-    drawText(ctx, film.title.toUpperCase(), cx, y, { spacing: 2 })
-
-    ctx.fillStyle = "#C9A97F"
-    ctx.font = `italic ${tight ? 34 : 40}px ${serifFont()}`
-    drawText(ctx, `${film.year}  ·  ${dayLine(film)}`, cx, y + (tight ? 44 : 52))
-
-    ctx.strokeStyle = "rgba(231,194,125,0.18)"
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    ctx.moveTo(cx - 150, y + (tight ? 76 : 92))
-    ctx.lineTo(cx + 150, y + (tight ? 76 : 92))
-    ctx.stroke()
-
-    y += step
-  }
+  ctx.font = `34px ${displayFont()}`
+  drawText(ctx, monthLabel(monthKey).toUpperCase(), lx, 682, { spacing: 10 })
 
   ctx.fillStyle = "#EBD4A8"
-  ctx.font = `italic 42px ${serifFont()}`
-  drawText(ctx, "Omelettes at eight · Screening at nine", cx, 1312)
-  ctx.fillStyle = "#C9A97Fcc"
-  ctx.font = `italic 34px ${serifFont()}`
-  drawText(ctx, "Location announced on the day", cx, 1364)
+  ctx.font = `italic 30px ${serifFont()}`
+  drawText(ctx, "Omelettes at eight", lx, 756)
+  drawText(ctx, "Screening at nine", lx, 796)
+  ctx.fillStyle = "#C9A97Fbb"
+  ctx.font = `italic 25px ${serifFont()}`
+  drawText(ctx, "Location announced on the day", lx, 844)
+
+  // Hosts anchored to the sheet's bottom corners, balancing the composition.
+  const hostW = 170
+  drawHost(ctx, eden, 92, POSTER_H - m - b - 12, hostW)
+  drawHost(ctx, noga, POSTER_W - m - b - hostW - 12, POSTER_H - m - b - 12, hostW)
+
+  // Right: the artwork
+  const { w, h, x0, gap } = posterRow(540, 1120, films.length, 360, 34)
+  const top = 120 + (1000 - (h + 108)) / 2
+  films.forEach((film, i) => {
+    const x = x0 + i * (w + gap)
+    ctx.save()
+    ctx.shadowColor = "rgba(0,0,0,0.75)"
+    ctx.shadowBlur = 34
+    ctx.shadowOffsetY = 14
+    ctx.fillStyle = "#000"
+    ctx.fillRect(x, top, w, h)
+    ctx.restore()
+
+    const image = art[i]
+    if (image) drawCover(ctx, image, x, top, w, h)
+    else fallbackPlate(ctx, film, x, top, w, h, "#1A0D0E", `${GOLD}cc`)
+
+    ctx.strokeStyle = `${GOLD}88`
+    ctx.lineWidth = 2
+    ctx.strokeRect(x + 1, top + 1, w - 2, h - 2)
+
+    ctx.fillStyle = CREAM
+    const size = fit(ctx, film.title.toUpperCase(), w, displayFont(), 32, 13, 1)
+    drawText(ctx, film.title.toUpperCase(), x + w / 2, top + h + 42, { spacing: 1 })
+
+    ctx.fillStyle = `${GOLD}cc`
+    ctx.font = `20px ${displayFont()}`
+    drawText(ctx, dayLine(film), x + w / 2, top + h + 72, { spacing: 5 })
+
+    ctx.fillStyle = "#C9A97F99"
+    ctx.font = `italic 22px ${serifFont()}`
+    drawText(ctx, film.year, x + w / 2, top + h + 100)
+    void size
+  })
 }
 
-function drawPlaybill({ ctx, films, monthKey, eden, noga }: Ctx) {
+function drawPlaybill({ ctx, films, art, monthKey, eden, noga }: Ctx) {
   ctx.fillStyle = "#EFE7D6"
   ctx.fillRect(0, 0, POSTER_W, POSTER_H)
-  speckle(ctx, 5200, "#4A3A22")
+  speckle(ctx, 6000, "#4A3A22")
 
   const ink = "#16120D"
   const red = "#9A2B1C"
   const cx = POSTER_W / 2
 
   const grey = "grayscale(1) contrast(1.15)"
-  const hostW = 152
-  drawHost(ctx, eden, 96, POSTER_H - 74, hostW, "#EFE7D6", grey)
-  drawHost(ctx, noga, POSTER_W - hostW - 96, POSTER_H - 74, hostW, "#EFE7D6", grey)
+  const hostW = 122
+  drawHost(ctx, eden, 74, POSTER_H - 62, hostW, grey)
+  drawHost(ctx, noga, POSTER_W - hostW - 74, POSTER_H - 62, hostW, grey)
 
   ctx.strokeStyle = ink
-  ctx.lineWidth = 6
-  ctx.strokeRect(46, 46, POSTER_W - 92, POSTER_H - 92)
+  ctx.lineWidth = 5
+  ctx.strokeRect(30, 30, POSTER_W - 60, POSTER_H - 60)
   ctx.lineWidth = 1.5
-  ctx.strokeRect(62, 62, POSTER_W - 124, POSTER_H - 124)
+  ctx.strokeRect(44, 44, POSTER_W - 88, POSTER_H - 88)
 
   ctx.fillStyle = ink
-  ctx.font = `34px ${displayFont()}`
-  drawText(ctx, "A FILM CLUB · EST. MMXXIV", cx, 160, { spacing: 10 })
+  ctx.font = `26px ${displayFont()}`
+  drawText(ctx, "A FILM CLUB · EST. MMXXIV", cx, 108, { spacing: 9 })
 
-  fit(ctx, "IN THE SOUP", POSTER_W - 240, displayFont(), 168, 70, 2)
-  drawText(ctx, "IN THE SOUP", cx, 300, { spacing: 2 })
+  fit(ctx, "IN THE SOUP", POSTER_W - 620, displayFont(), 124, 60, 2)
+  drawText(ctx, "IN THE SOUP", cx, 214, { spacing: 2 })
 
-  ctx.font = `30px ${displayFont()}`
   ctx.fillStyle = red
-  drawText(ctx, "✦   PROGRAMME FOR   ✦", cx, 366, { spacing: 8 })
+  ctx.font = `22px ${displayFont()}`
+  drawText(ctx, "✦   PROGRAMME FOR   ✦", cx, 256, { spacing: 7 })
   ctx.fillStyle = ink
-  ctx.font = `62px ${displayFont()}`
-  drawText(ctx, monthLabel(monthKey).toUpperCase(), cx, 442, { spacing: 8 })
+  ctx.font = `46px ${displayFont()}`
+  drawText(ctx, monthLabel(monthKey).toUpperCase(), cx, 312, { spacing: 8 })
 
   ctx.lineWidth = 3
   ctx.beginPath()
-  ctx.moveTo(150, 486)
-  ctx.lineTo(POSTER_W - 150, 486)
+  ctx.moveTo(220, 344)
+  ctx.lineTo(POSTER_W - 220, 344)
   ctx.stroke()
 
-  const tight = films.length >= 4
-  const { step, first } = filmLayout(
-    tight ? 512 : 530,
-    1230,
-    films.length,
-    224,
-    tight ? 132 : 150,
-    tight ? 80 : 90
-  )
-  let y = first
+  const { w, h, x0, gap } = posterRow(150, POSTER_W - 300, films.length, 360, 44)
+  const top = 380
   films.forEach((film, i) => {
-    if (i > 0) {
-      ctx.strokeStyle = ink
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(230, y - 96)
-      ctx.lineTo(POSTER_W - 230, y - 96)
-      ctx.stroke()
-      ctx.fillStyle = "#EFE7D6"
-      ctx.fillRect(cx - 34, y - 120, 68, 44)
-      ctx.fillStyle = red
-      ctx.font = `26px ${displayFont()}`
-      drawText(ctx, "✦", cx, y - 88)
-    }
+    const x = x0 + i * (w + gap)
+    const image = art[i]
+    ctx.save()
+    ctx.filter = "grayscale(1) contrast(1.12) brightness(1.02)"
+    if (image) drawCover(ctx, image, x, top, w, h)
+    else fallbackPlate(ctx, film, x, top, w, h, "#D9D0BD", ink)
+    ctx.restore()
+
+    ctx.strokeStyle = ink
+    ctx.lineWidth = 2.5
+    ctx.strokeRect(x + 1, top + 1, w - 2, h - 2)
 
     ctx.fillStyle = red
-    ctx.font = `${tight ? 28 : 32}px ${displayFont()}`
-    drawText(ctx, dayLine(film), cx, y - (tight ? 30 : 34), { spacing: 8 })
+    ctx.font = `20px ${displayFont()}`
+    drawText(ctx, dayLine(film), x + w / 2, top + h + 40, { spacing: 6 })
 
     ctx.fillStyle = ink
-    fit(ctx, film.title.toUpperCase(), POSTER_W - 240, displayFont(), tight ? 76 : 88, 32, 1)
-    drawText(ctx, film.title.toUpperCase(), cx, y + (tight ? 36 : 42), { spacing: 1 })
+    fit(ctx, film.title.toUpperCase(), w, displayFont(), 34, 13, 1)
+    drawText(ctx, film.title.toUpperCase(), x + w / 2, top + h + 82, { spacing: 1 })
 
-    ctx.font = `italic ${tight ? 32 : 38}px ${serifFont()}`
-    drawText(ctx, film.year, cx, y + (tight ? 76 : 88))
-
-    y += step
+    ctx.font = `italic 24px ${serifFont()}`
+    drawText(ctx, film.year, x + w / 2, top + h + 114)
   })
 
   ctx.strokeStyle = ink
   ctx.lineWidth = 3
   ctx.beginPath()
-  ctx.moveTo(150, 1268)
-  ctx.lineTo(POSTER_W - 150, 1268)
+  ctx.moveTo(220, POSTER_H - 168)
+  ctx.lineTo(POSTER_W - 220, POSTER_H - 168)
   ctx.stroke()
 
   ctx.fillStyle = ink
-  ctx.font = `36px ${displayFont()}`
-  drawText(ctx, "OMELETTES 20:00   ·   SCREENING 21:00", cx, 1330, { spacing: 6 })
-  ctx.font = `italic 34px ${serifFont()}`
-  drawText(ctx, "Location announced on the day", cx, 1382)
+  ctx.font = `30px ${displayFont()}`
+  drawText(ctx, "OMELETTES 20:00   ·   SCREENING 21:00", cx, POSTER_H - 118, {
+    spacing: 6,
+  })
+  ctx.font = `italic 26px ${serifFont()}`
+  drawText(ctx, "Location announced on the day", cx, POSTER_H - 76)
 }
 
-function drawTicket({ ctx, films, monthKey, eden, noga }: Ctx) {
+function drawTicket({ ctx, films, art, monthKey, eden, noga }: Ctx) {
   ctx.fillStyle = "#0D0707"
   ctx.fillRect(0, 0, POSTER_W, POSTER_H)
 
-  const m = 54
-  const w = POSTER_W - m * 2
-  const h = POSTER_H - m * 2
+  const m = 28
   const stock = ctx.createLinearGradient(m, m, POSTER_W - m, POSTER_H - m)
   stock.addColorStop(0, "#F6E7C8")
   stock.addColorStop(0.45, "#EFDCB6")
   stock.addColorStop(1, "#E4CDA1")
   ctx.save()
   ctx.shadowColor = "rgba(0,0,0,0.6)"
-  ctx.shadowBlur = 60
-  ctx.shadowOffsetY = 20
+  ctx.shadowBlur = 50
+  ctx.shadowOffsetY = 16
   ctx.fillStyle = stock
-  roundRect(ctx, m, m, w, h, 14)
+  roundRect(ctx, m, m, POSTER_W - m * 2, POSTER_H - m * 2, 16)
   ctx.fill()
   ctx.restore()
 
   const ink = "#2A1408"
   const sub = "#7A4A24"
-  const cx = POSTER_W / 2
-  const tear = POSTER_H - 470
+  const perf = POSTER_W - 430
+  const bodyCx = (m + perf) / 2
+  const stubCx = (perf + POSTER_W - m) / 2
 
-  const hostW = 150
-  drawHost(ctx, eden, m + 40, POSTER_H - m - 24, hostW, "#EFDCB6")
-  drawHost(ctx, noga, POSTER_W - m - hostW - 40, POSTER_H - m - 24, hostW, "#EFDCB6")
-
-  // Punched notches at the tear line
+  // Perforation, punched top and bottom
   ctx.fillStyle = "#0D0707"
   ctx.beginPath()
-  ctx.arc(m, tear, 26, 0, Math.PI * 2)
-  ctx.arc(POSTER_W - m, tear, 26, 0, Math.PI * 2)
+  ctx.arc(perf, m, 24, 0, Math.PI * 2)
+  ctx.arc(perf, POSTER_H - m, 24, 0, Math.PI * 2)
   ctx.fill()
-
   ctx.strokeStyle = "rgba(42,20,8,0.45)"
   ctx.lineWidth = 3
   ctx.setLineDash([12, 12])
   ctx.beginPath()
-  ctx.moveTo(m + 40, tear)
-  ctx.lineTo(POSTER_W - m - 40, tear)
+  ctx.moveTo(perf, m + 38)
+  ctx.lineTo(perf, POSTER_H - m - 38)
   ctx.stroke()
   ctx.setLineDash([])
 
   ctx.fillStyle = sub
-  ctx.font = `36px ${displayFont()}`
-  drawText(ctx, "ADMIT ONE", m + 56, 176, { spacing: 12, align: "left" })
-  drawText(ctx, monthLabel(monthKey, "MM / yyyy"), POSTER_W - m - 56, 176, {
-    spacing: 12,
+  ctx.font = `28px ${displayFont()}`
+  drawText(ctx, "ADMIT ONE", m + 62, 108, { spacing: 10, align: "left" })
+  drawText(ctx, monthLabel(monthKey, "MM / yyyy"), perf - 46, 108, {
+    spacing: 10,
     align: "right",
   })
 
   ctx.fillStyle = ink
-  fit(ctx, "IN THE SOUP", w - 160, displayFont(), 150, 60, 2)
-  drawText(ctx, "IN THE SOUP", cx, 322, { spacing: 2 })
+  fit(ctx, "IN THE SOUP", 820, displayFont(), 112, 50, 2)
+  drawText(ctx, "IN THE SOUP", bodyCx, 214, { spacing: 2 })
 
   ctx.fillStyle = sub
-  ctx.font = `48px ${displayFont()}`
-  drawText(ctx, monthLabel(monthKey).toUpperCase(), cx, 392, { spacing: 12 })
+  ctx.font = `36px ${displayFont()}`
+  drawText(ctx, monthLabel(monthKey).toUpperCase(), bodyCx, 264, { spacing: 11 })
 
   ctx.strokeStyle = "rgba(42,20,8,0.25)"
   ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.moveTo(m + 56, 440)
-  ctx.lineTo(POSTER_W - m - 56, 440)
+  ctx.moveTo(m + 62, 300)
+  ctx.lineTo(perf - 46, 300)
   ctx.stroke()
 
-  const { step, first } = filmLayout(480, tear - 60, films.length, 176, 140, 40)
-  let y = first
-  films.forEach((film) => {
+  const { w, h, x0, gap } = posterRow(m + 62, perf - m - 108, films.length, 300, 34)
+  const top = 330 + (850 - (h + 110)) / 2
+  films.forEach((film, i) => {
+    const x = x0 + i * (w + gap)
+    const image = art[i]
+    ctx.save()
+    ctx.shadowColor = "rgba(42,20,8,0.45)"
+    ctx.shadowBlur = 22
+    ctx.shadowOffsetY = 10
+    ctx.fillStyle = "#00000022"
+    ctx.fillRect(x, top, w, h)
+    ctx.restore()
+    if (image) drawCover(ctx, image, x, top, w, h)
+    else fallbackPlate(ctx, film, x, top, w, h, "#D9C6A0", ink)
+
+    ctx.strokeStyle = "rgba(42,20,8,0.55)"
+    ctx.lineWidth = 2
+    ctx.strokeRect(x + 1, top + 1, w - 2, h - 2)
+
     ctx.fillStyle = sub
-    ctx.font = `28px ${displayFont()}`
-    drawText(ctx, `№ ${String(film.no).padStart(3, "0")}`, m + 56, y, {
-      spacing: 6,
-      align: "left",
+    ctx.font = `18px ${displayFont()}`
+    drawText(ctx, `№ ${String(film.no).padStart(3, "0")}`, x + w / 2, top + h + 34, {
+      spacing: 5,
     })
-    drawText(ctx, dayLine(film), POSTER_W - m - 56, y, { spacing: 6, align: "right" })
 
     ctx.fillStyle = ink
-    fit(ctx, film.title.toUpperCase(), w - 130, displayFont(), 74, 30, 1)
-    drawText(ctx, film.title.toUpperCase(), cx, y + 66, { spacing: 1 })
+    fit(ctx, film.title.toUpperCase(), w, displayFont(), 30, 12, 1)
+    drawText(ctx, film.title.toUpperCase(), x + w / 2, top + h + 72, { spacing: 1 })
 
     ctx.fillStyle = sub
-    ctx.font = `italic 34px ${serifFont()}`
-    drawText(ctx, film.year, cx, y + 108)
-
-    y += step
+    ctx.font = `19px ${displayFont()}`
+    drawText(ctx, `${dayLine(film)} · ${film.year}`, x + w / 2, top + h + 100, {
+      spacing: 3,
+    })
   })
 
   // Stub
   ctx.fillStyle = sub
-  ctx.font = `30px ${displayFont()}`
-  const stubY = tear + 96
-  drawText(ctx, "DOORS", m + 130, stubY, { spacing: 8 })
-  drawText(ctx, "FEATURE", cx, stubY, { spacing: 8 })
-  drawText(ctx, "PLACE", POSTER_W - m - 130, stubY, { spacing: 8 })
-
+  ctx.font = `24px ${displayFont()}`
+  drawText(ctx, "DOORS", stubCx, 190, { spacing: 8 })
   ctx.fillStyle = ink
-  ctx.font = `56px ${displayFont()}`
-  drawText(ctx, "20:00", m + 130, stubY + 66, { spacing: 3 })
-  drawText(ctx, "21:00", cx, stubY + 66, { spacing: 3 })
-  ctx.font = `30px ${displayFont()}`
-  drawText(ctx, "ON THE DAY", POSTER_W - m - 130, stubY + 60, { spacing: 3 })
+  ctx.font = `62px ${displayFont()}`
+  drawText(ctx, "20:00", stubCx, 254, { spacing: 3 })
 
-  // Box-office stamp, struck in the clear middle of the stub between the hosts
+  ctx.fillStyle = sub
+  ctx.font = `24px ${displayFont()}`
+  drawText(ctx, "FEATURE", stubCx, 330, { spacing: 8 })
+  ctx.fillStyle = ink
+  ctx.font = `62px ${displayFont()}`
+  drawText(ctx, "21:00", stubCx, 394, { spacing: 3 })
+
+  ctx.fillStyle = sub
+  ctx.font = `24px ${displayFont()}`
+  drawText(ctx, "PLACE", stubCx, 470, { spacing: 8 })
+  ctx.fillStyle = ink
+  ctx.font = `32px ${displayFont()}`
+  drawText(ctx, "ON THE DAY", stubCx, 516, { spacing: 3 })
+
   ctx.save()
-  ctx.translate(cx, POSTER_H - 168)
-  ctx.rotate((-14 * Math.PI) / 180)
+  ctx.translate(stubCx, 630)
+  ctx.rotate((-13 * Math.PI) / 180)
   ctx.globalAlpha = 0.26
   ctx.strokeStyle = "#8E2B1B"
   ctx.fillStyle = "#8E2B1B"
   ctx.lineWidth = 5
-  roundRect(ctx, -110, -56, 220, 112, 8)
+  roundRect(ctx, -104, -52, 208, 104, 8)
   ctx.stroke()
-  ctx.font = `62px ${displayFont()}`
-  drawText(ctx, monthLabel(monthKey, "MMM").toUpperCase(), 0, 6, { spacing: 6 })
-  ctx.font = `28px ${displayFont()}`
-  drawText(ctx, monthLabel(monthKey, "yyyy"), 0, 42, { spacing: 8 })
+  ctx.font = `56px ${displayFont()}`
+  drawText(ctx, monthLabel(monthKey, "MMM").toUpperCase(), 0, 4, { spacing: 6 })
+  ctx.font = `24px ${displayFont()}`
+  drawText(ctx, monthLabel(monthKey, "yyyy"), 0, 38, { spacing: 8 })
   ctx.restore()
+
+  const hostW = 132
+  drawHost(ctx, eden, stubCx - hostW - 10, POSTER_H - m - 18, hostW)
+  drawHost(ctx, noga, stubCx + 10, POSTER_H - m - 18, hostW)
 }
 
-function drawNeon({ ctx, films, monthKey, eden, noga, soup }: Ctx) {
+function drawNeon({ ctx, films, art, monthKey, eden, noga, soup }: Ctx) {
   ctx.fillStyle = "#080607"
   ctx.fillRect(0, 0, POSTER_W, POSTER_H)
 
-  const halo = ctx.createRadialGradient(
-    POSTER_W / 2,
-    420,
-    30,
-    POSTER_W / 2,
-    520,
-    900
-  )
+  const halo = ctx.createRadialGradient(POSTER_W / 2, 240, 30, POSTER_W / 2, 420, 1100)
   halo.addColorStop(0, "rgba(231,194,125,0.20)")
   halo.addColorStop(0.5, "rgba(160,40,40,0.10)")
   halo.addColorStop(1, "rgba(0,0,0,0)")
@@ -614,92 +660,85 @@ function drawNeon({ ctx, films, monthKey, eden, noga, soup }: Ctx) {
 
   const cx = POSTER_W / 2
 
-  const hostW = 168
-  drawHost(ctx, eden, 60, POSTER_H - 30, hostW, "#080607")
-  drawHost(ctx, noga, POSTER_W - hostW - 60, POSTER_H - 30, hostW, "#080607")
+  const hostW = 150
+  drawHost(ctx, eden, 46, POSTER_H - 22, hostW)
+  drawHost(ctx, noga, POSTER_W - hostW - 46, POSTER_H - 22, hostW)
 
-  const soupW = 150
+  const soupW = 104
   ctx.save()
   ctx.shadowColor = "rgba(231,194,125,0.55)"
-  ctx.shadowBlur = 50
-  ctx.drawImage(soup, cx - soupW / 2, 150, soupW, soupW)
+  ctx.shadowBlur = 44
+  ctx.drawImage(soup, cx - soupW / 2, 74, soupW, soupW)
   ctx.restore()
 
-  // Tube-lit title: a wide soft glow, then a hot core.
   const title = "IN THE SOUP"
-  fit(ctx, title, POSTER_W - 200, displayFont(), 172, 70, 6)
+  fit(ctx, title, POSTER_W - 760, displayFont(), 122, 50, 5)
   ctx.save()
   ctx.shadowColor = "rgba(255,196,120,0.9)"
   ctx.fillStyle = "rgba(255,226,178,0.35)"
-  ctx.shadowBlur = 90
-  drawText(ctx, title, cx, 430, { spacing: 6 })
-  ctx.shadowBlur = 46
+  ctx.shadowBlur = 80
+  drawText(ctx, title, cx, 296, { spacing: 5 })
+  ctx.shadowBlur = 42
   ctx.fillStyle = "#FFF3DC"
-  drawText(ctx, title, cx, 430, { spacing: 6 })
+  drawText(ctx, title, cx, 296, { spacing: 5 })
   ctx.restore()
 
   ctx.fillStyle = GOLD
-  ctx.font = `40px ${displayFont()}`
+  ctx.font = `32px ${displayFont()}`
   ctx.save()
   ctx.shadowColor = "rgba(231,194,125,0.7)"
-  ctx.shadowBlur = 28
-  drawText(ctx, monthLabel(monthKey).toUpperCase(), cx, 512, { spacing: 18 })
+  ctx.shadowBlur = 24
+  drawText(ctx, monthLabel(monthKey).toUpperCase(), cx, 348, { spacing: 15 })
   ctx.restore()
 
-  const tight = films.length >= 4
-  const { step, first } = filmLayout(
-    tight ? 556 : 580,
-    1244,
-    films.length,
-    210,
-    tight ? 126 : 150,
-    tight ? 84 : 96
-  )
-  let y = first
+  const { w, h, x0, gap } = posterRow(160, POSTER_W - 320, films.length, 330, 40)
+  const top = 400
   films.forEach((film, i) => {
-    // In a tight month there isn't clearance for a rule between entries
-    // without it crowding the year above it, so the spacing carries the split.
-    if (i > 0 && !tight) {
-      ctx.strokeStyle = "rgba(231,194,125,0.18)"
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(190, y - 78)
-      ctx.lineTo(POSTER_W - 190, y - 78)
-      ctx.stroke()
-    }
+    const x = x0 + i * (w + gap)
+    const image = art[i]
+    ctx.save()
+    ctx.shadowColor = "rgba(231,194,125,0.28)"
+    ctx.shadowBlur = 40
+    ctx.fillStyle = "#000"
+    ctx.fillRect(x, top, w, h)
+    ctx.restore()
+    if (image) drawCover(ctx, image, x, top, w, h)
+    else fallbackPlate(ctx, film, x, top, w, h, "#141011", `${GOLD}cc`)
+
+    ctx.strokeStyle = "rgba(231,194,125,0.45)"
+    ctx.lineWidth = 1.5
+    ctx.strokeRect(x + 0.75, top + 0.75, w - 1.5, h - 1.5)
 
     ctx.fillStyle = "rgba(231,194,125,0.75)"
-    ctx.font = `${tight ? 24 : 28}px ${displayFont()}`
-    drawText(ctx, dayLine(film), cx, y - (tight ? 20 : 24), { spacing: 10 })
+    ctx.font = `19px ${displayFont()}`
+    drawText(ctx, dayLine(film), x + w / 2, top + h + 38, { spacing: 7 })
 
     ctx.save()
     ctx.fillStyle = "#F7F1E6"
     ctx.shadowColor = "rgba(255,220,170,0.35)"
-    ctx.shadowBlur = 26
-    fit(ctx, film.title.toUpperCase(), POSTER_W - 260, displayFont(), tight ? 68 : 80, 30, 2)
-    drawText(ctx, film.title.toUpperCase(), cx, y + (tight ? 44 : 52), { spacing: 2 })
+    ctx.shadowBlur = 22
+    fit(ctx, film.title.toUpperCase(), w, displayFont(), 32, 13, 1)
+    drawText(ctx, film.title.toUpperCase(), x + w / 2, top + h + 78, { spacing: 1 })
     ctx.restore()
 
     ctx.fillStyle = "rgba(246,239,223,0.45)"
-    ctx.font = `italic ${tight ? 30 : 36}px ${serifFont()}`
-    drawText(ctx, film.year, cx, y + (tight ? 82 : 96))
-
-    y += step
+    ctx.font = `italic 22px ${serifFont()}`
+    drawText(ctx, film.year, x + w / 2, top + h + 108)
   })
 
   ctx.strokeStyle = "rgba(231,194,125,0.22)"
   ctx.lineWidth = 1
   ctx.beginPath()
-  ctx.moveTo(140, 1274)
-  ctx.lineTo(POSTER_W - 140, 1274)
+  ctx.moveTo(420, POSTER_H - 150)
+  ctx.lineTo(POSTER_W - 420, POSTER_H - 150)
   ctx.stroke()
 
   ctx.fillStyle = "#EBD4A8"
-  ctx.font = `italic 40px ${serifFont()}`
-  drawText(ctx, "Omelettes at eight · Screening at nine", cx, 1336)
-  ctx.fillStyle = "rgba(201,169,127,0.72)"
   ctx.font = `italic 32px ${serifFont()}`
-  drawText(ctx, "Location announced on the day", cx, 1384)
+  drawText(ctx, "Omelettes at eight · Screening at nine", cx, POSTER_H - 102)
+  ctx.fillStyle = "rgba(201,169,127,0.72)"
+  ctx.font = `italic 26px ${serifFont()}`
+  drawText(ctx, "Location announced on the day", cx, POSTER_H - 62)
 }
 
 const RENDERERS: Record<PosterStyleId, (c: Ctx) => void> = {
@@ -711,7 +750,7 @@ const RENDERERS: Record<PosterStyleId, (c: Ctx) => void> = {
 
 /* -------------------------------------------------------------------------- */
 
-/** Renders `style` for `monthKey` into `canvas` at 2× for a crisp export. */
+/** Renders `style` for `monthKey` into `canvas` at 300dpi A4 landscape. */
 export async function renderPoster(
   canvas: HTMLCanvasElement,
   style: PosterStyleId,
@@ -731,15 +770,24 @@ export async function renderPoster(
   // The canvas only has a font once the document has actually loaded it.
   if (document.fonts?.ready) await document.fonts.ready
 
-  const [eden, noga, soup] = await Promise.all([
+  const [eden, noga, soup, ...art] = await Promise.all([
     loadImage("/eden.png"),
     loadImage("/noga.png"),
     loadImage("/soup.png"),
+    ...films.map((f) => loadPoster(f.posterUrl)),
   ])
 
-  RENDERERS[style]({ ctx, films, monthKey, eden, noga, soup })
+  RENDERERS[style]({
+    ctx,
+    films,
+    art: art as (HTMLImageElement | null)[],
+    monthKey,
+    eden,
+    noga,
+    soup,
+  })
 }
 
 export function posterFilename(style: PosterStyleId, monthKey: string) {
-  return `in-the-soup-${monthKey}-${style}.png`
+  return `in-the-soup-${monthKey}-${style}.jpg`
 }

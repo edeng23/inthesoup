@@ -57,6 +57,8 @@ export default function PosterMaker({
   }, [open])
 
   const download = () => {
+    // JPEG, not PNG: an A4 sheet at 300dpi carrying photographic artwork is
+    // several times smaller this way, with no visible loss in print.
     canvas.current?.toBlob((blob) => {
       if (!blob) return
       const url = URL.createObjectURL(blob)
@@ -65,7 +67,7 @@ export default function PosterMaker({
       a.download = posterFilename(style, monthKey)
       a.click()
       URL.revokeObjectURL(url)
-    }, "image/png")
+    }, "image/jpeg", 0.94)
   }
 
   return (
@@ -144,7 +146,7 @@ export default function PosterMaker({
                   </button>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-[1fr_1.05fr]">
+                <div className="grid gap-6">
                   <div>
                     <div
                       className="mb-3 font-[family-name:var(--font-display)] text-[11px] tracking-[0.36em]"
@@ -152,7 +154,7 @@ export default function PosterMaker({
                     >
                       CHOOSE A STYLE
                     </div>
-                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                    <div className="grid grid-cols-2 gap-2">
                       {POSTER_STYLES.map((s) => {
                         const on = s.id === style
                         return (
@@ -197,7 +199,7 @@ export default function PosterMaker({
                         cursor: busy ? "wait" : "pointer",
                       }}
                     >
-                      {busy ? "PRINTING…" : "DOWNLOAD PNG"}
+                      {busy ? "PRINTING…" : "DOWNLOAD A4"}
                     </button>
 
                     {error && (
