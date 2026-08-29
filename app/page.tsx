@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { format, parseISO } from "date-fns"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -612,6 +612,15 @@ function StandeesMobile() {
  */
 function TheWholePot() {
   const [active, setActive] = useState<Screening | null>(null)
+  const [detail, setDetail] = useState<Screening | null>(null)
+
+  // Stepping through the archive from inside the detail view.
+  const step = (delta: number) =>
+    setDetail((current) => {
+      if (!current) return current
+      const next = allScreenings[current.no - 1 + delta]
+      return next ?? current
+    })
 
   return (
     <section
@@ -658,7 +667,10 @@ function TheWholePot() {
               whileHover="lit"
               animate={active?.no === film.no ? "lit" : "rest"}
               onHoverStart={() => setActive(film)}
-              onClick={() => setActive((c) => (c?.no === film.no ? null : film))}
+              onClick={() => {
+                setActive(film)
+                setDetail(film)
+              }}
               variants={{
                 rest: { scale: 1, zIndex: 1 },
                 lit: { scale: 1.16, zIndex: 30 },
@@ -731,7 +743,208 @@ function TheWholePot() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {detail && (
+          <ScreeningDetail
+            film={detail}
+            onClose={() => setDetail(null)}
+            onStep={step}
+          />
+        )}
+      </AnimatePresence>
     </section>
+  )
+}
+
+/**
+ * One film from the wall, taken down and looked at properly: the artwork at
+ * size, and the night we watched it. Arrow keys walk the archive.
+ */
+function ScreeningDetail({
+  film,
+  onClose,
+  onStep,
+}: {
+  film: Screening
+  onClose: () => void
+  onStep: (delta: number) => void
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+      if (e.key === "ArrowRight") onStep(1)
+      if (e.key === "ArrowLeft") onStep(-1)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [onClose, onStep])
+
+  const screened = parseISO(film.date)
+  const isPast = screened.getTime() <= Date.now()
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[300] flex items-center justify-center overflow-y-auto p-4 sm:p-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{ background: "rgba(4,2,2,0.93)", backdropFilter: "blur(10px)" }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="my-auto w-full max-w-3xl"
+        initial={{ y: 20, scale: 0.97 }}
+        animate={{ y: 0, scale: 1 }}
+        exit={{ y: 10, scale: 0.98 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="relative p-5 sm:p-8"
+          style={{
+            background: "linear-gradient(180deg, #180C0C, #0C0606)",
+            border: `1px solid ${GOLD_DIM}55`,
+            boxShadow: "0 40px 120px rgba(0,0,0,0.85)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full text-lg leading-none"
+            style={{
+              color: GOLD,
+              background: "rgba(12,6,6,0.82)",
+              border: `1px solid ${GOLD_DIM}66`,
+              backdropFilter: "blur(4px)",
+            }}
+          >
+            ✕
+          </button>
+
+          <div className="grid gap-6 sm:grid-cols-[minmax(0,290px)_1fr] sm:gap-9">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={film.no}
+                src={film.posterUrl}
+                alt={film.title}
+                className="poster-img mx-auto w-full max-w-[210px] object-cover sm:max-w-none"
+                style={{
+                  aspectRatio: "2 / 3",
+                  border: `1px solid ${GOLD}66`,
+                  boxShadow: "0 24px 60px rgba(0,0,0,0.7)",
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              />
+            </AnimatePresence>
+
+            <div className="flex min-w-0 flex-col">
+              <div
+                className="font-[family-name:var(--font-display)] text-xs tracking-[0.34em]"
+                style={{ color: GOLD_DIM }}
+              >
+                № {String(film.no).padStart(3, "0")} OF{" "}
+                {String(totalScreenings).padStart(3, "0")}
+              </div>
+
+              <h3
+                className="mt-3 font-[family-name:var(--font-display)] leading-[0.95]"
+                style={{
+                  fontSize: "clamp(1.9rem, 5vw, 3.1rem)",
+                  color: "#FFF4DE",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {film.title}
+              </h3>
+
+              <div
+                className="mt-1 text-2xl italic"
+                style={{ color: "#C9A97Faa" }}
+              >
+                {film.year}
+              </div>
+
+              <div
+                className="mt-6 border-t pt-5"
+                style={{ borderColor: `${GOLD_DIM}33` }}
+              >
+                <div
+                  className="font-[family-name:var(--font-display)] text-[11px] tracking-[0.3em]"
+                  style={{ color: GOLD_DIM }}
+                >
+                  {isPast ? "WE WATCHED IT" : "WE'RE WATCHING IT"}
+                </div>
+                <div
+                  className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-[0.06em]"
+                  style={{ color: GOLD }}
+                >
+                  {format(screened, "EEEE d MMMM yyyy").toUpperCase()}
+                </div>
+              </div>
+
+              <div className="mt-auto flex items-center gap-3 pt-8">
+                <DetailArrow
+                  onClick={() => onStep(-1)}
+                  disabled={film.no <= 1}
+                  label="Previous film"
+                >
+                  ‹
+                </DetailArrow>
+                <DetailArrow
+                  onClick={() => onStep(1)}
+                  disabled={film.no >= totalScreenings}
+                  label="Next film"
+                >
+                  ›
+                </DetailArrow>
+                <span
+                  className="ml-1 hidden text-[10px] uppercase tracking-[0.24em] sm:inline"
+                  style={{ color: `${GOLD_DIM}99` }}
+                >
+                  or use ← →
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function DetailArrow({
+  children,
+  onClick,
+  disabled,
+  label,
+}: {
+  children: React.ReactNode
+  onClick: () => void
+  disabled: boolean
+  label: string
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      whileHover={disabled ? undefined : { scale: 1.08 }}
+      whileTap={disabled ? undefined : { scale: 0.94 }}
+      className="flex h-11 w-11 items-center justify-center rounded-full text-xl"
+      style={{
+        border: `1px solid ${disabled ? `${GOLD_DIM}44` : GOLD_DIM}`,
+        color: disabled ? `${GOLD_DIM}66` : GOLD,
+        cursor: disabled ? "not-allowed" : "pointer",
+      }}
+    >
+      {children}
+    </motion.button>
   )
 }
 
