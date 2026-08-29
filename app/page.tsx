@@ -13,6 +13,7 @@ import {
   type Screening,
 } from "@/lib/screenings"
 import Grain from "@/components/Grain"
+import PosterMaker from "@/components/PosterMaker"
 
 const VELVET = "#0D0707"
 const GOLD = "#E7C27D"
@@ -105,6 +106,8 @@ export default function InTheSoup() {
         </div>
 
         <TheWholePot />
+
+        <PosterMaker monthKey={monthKey} films={films} />
       </div>
 
       <ProgrammeTicker />
@@ -611,7 +614,12 @@ function TheWholePot() {
   const [active, setActive] = useState<Screening | null>(null)
 
   return (
-    <section className="mt-28" onPointerLeave={() => setActive(null)}>
+    <section
+      className="mt-28"
+      onPointerLeave={(e) => {
+        if (e.pointerType === "mouse") setActive(null)
+      }}
+    >
       <div className="mb-8 text-center">
         <div
           className="mx-auto mb-5 h-px w-24"
@@ -628,12 +636,6 @@ function TheWholePot() {
         >
           The Whole Pot
         </h2>
-        <div
-          className="mt-3 text-sm italic"
-          style={{ color: "#C9A97Faa" }}
-        >
-          Everything we&apos;ve projected since {monthLabel(monthKeys[0])}
-        </div>
       </div>
 
       <div
@@ -647,20 +649,23 @@ function TheWholePot() {
       >
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3 lg:grid-cols-9">
           {allScreenings.map((film) => (
-            <motion.div
+            <motion.button
               key={film.no}
+              type="button"
               className="relative cursor-pointer"
               style={{ aspectRatio: "2 / 3" }}
               initial="rest"
               whileHover="lit"
-              animate="rest"
+              animate={active?.no === film.no ? "lit" : "rest"}
               onHoverStart={() => setActive(film)}
+              onClick={() => setActive((c) => (c?.no === film.no ? null : film))}
               variants={{
                 rest: { scale: 1, zIndex: 1 },
                 lit: { scale: 1.16, zIndex: 30 },
               }}
               transition={{ type: "spring", stiffness: 300, damping: 24 }}
               title={`${film.title} (${film.year})`}
+              aria-label={`${film.title} (${film.year})`}
             >
               <motion.img
                 src={film.posterUrl}
@@ -679,7 +684,7 @@ function TheWholePot() {
                 }}
                 transition={{ duration: 0.35 }}
               />
-            </motion.div>
+            </motion.button>
           ))}
         </div>
       </div>
