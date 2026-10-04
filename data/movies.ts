@@ -611,4 +611,12 @@ export const moviesData: MonthlyMovies = {
       date: "2026-09-28",
     },
   ],
+  "2026-10": [
+    {
+      title: "Network",
+      year: "1976",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/e/e3/Network_%281976_poster%29.png",
+      date: "2026-10-05",
+    },
+  ],
 }
