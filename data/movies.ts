@@ -618,5 +618,23 @@ export const moviesData: MonthlyMovies = {
       posterUrl: "https://upload.wikimedia.org/wikipedia/en/e/e3/Network_%281976_poster%29.png",
       date: "2026-10-05",
     },
+    {
+      title: "My Son, My Son, What Have Ye Done",
+      year: "2009",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/f/fa/My_Son%2C_My_Son%2C_What_Have_Ye_Done.jpg",
+      date: "2026-10-12",
+    },
+    {
+      title: "First Reformed",
+      year: "2017",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/8/84/First_Reformed.png",
+      date: "2026-10-19",
+    },
+    {
+      title: "Cure",
+      year: "1997",
+      posterUrl: "https://upload.wikimedia.org/wikipedia/en/b/bc/Cureposter.jpg",
+      date: "2026-10-26",
+    },
   ],
 }
